@@ -1,0 +1,9 @@
+version: 2.1
+pipeline:
+  - step:
+      name: timeout
+      image: alpine:3.9
+      commands:
+        - "[ $((RANDOM % 10)) -ge 5 ] && sleep 15 || sleep 0" # randomly sleep
+      # play with the timeout below to see how cix handles it
+      timeout: $$TIMEOUT_IN_SECONDS

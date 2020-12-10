@@ -1,0 +1,17 @@
+version: 2.1
+pipeline:
+  - step:
+      name: environment
+      image: alpine:3.9
+      environment:
+        - name: FOO
+          value: $$FOO_FROM_COMMAND # if passed with -e option, $$ literals will be replaced
+          default: foo_default
+        - name: BAR
+          value: $$BAR_FROM_COMMAND
+          default: $$BAR_DEFAULT
+        # not passing these properties will not cause any failures
+        # the environment variables would be the $$ literals during exec, or the default, if specified
+      commands:
+        - echo $FOO
+        - echo $BAR

@@ -1,0 +1,18 @@
+version: 2.1
+pipeline:
+  - step:
+      name: docker-oo-docker
+      image: alpine:3.9
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+      commands:
+        - apk update && apk add docker
+        - ": -------------------"
+        - hostname
+        - ": -------------------"
+        - ip a s eth0
+        - ip r | awk '$1 == "default" { print $3 }'
+        - ": -------------------"
+        # Specify '--network $CIX_NETWORK_NAME' to connect to the same Docker network as other
+        # containers in the pipeline, allowing unencumbered access to services.
+        - docker run --rm --network $CIX_NETWORK_NAME alpine:3.9 sh -c 'echo hello world from a container started by the container'

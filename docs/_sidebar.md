@@ -1,0 +1,6 @@
+- [Home](/)
+- [Getting Started](/getting-started/install.md)
+- [Tutorials](/tutorials/commands.md)
+- [Reference](/reference/cli.md)
+- [Contributing](development.md)
+- [Release Notes](release-notes.md)

@@ -1,0 +1,69 @@
+version: 2.1
+pipeline:
+  - step:
+      name: create-html
+      image: alpine:3.9
+      volumes:
+        - /tmp:/tmp
+      commands:
+        - echo "<html><title>Inter-Container Communication Test</title><body>Hello from NGINX!</body</html>" > /tmp/iccyaml.html
+
+  - step:
+      name: web-server
+      hostname: www.salesforce.com
+      image: nginx:1.15-alpine
+      background: true
+      volumes:
+        - /tmp:/usr/share/nginx/html:ro
+
+  - step:
+      name: background-service
+      image: alpine:3.9
+      background: true
+      commands:
+        - ": ---- my hostname ---------------"
+        - hostname
+        - ": ---- my hostname in /etc/hosts ---------------"
+        - cat /etc/hosts
+        - ": ---- environment variables furnished by CIX ---------------"
+        - env | grep CIX
+        - ": ---- DNS for containers ---------------"
+        - nslookup background-service 2>/dev/null
+        - nslookup web-server         2>/dev/null
+        - nslookup www.salesforce.com 2>/dev/null
+
+  - step:
+      name: myhostname
+      image: alpine:3.9
+      hostname: hostyhost.salesforce.com
+      commands:
+        - hostname
+        - cat /etc/hosts
+        - nslookup myhostname  2>/dev/null
+        - nslookup hostyhost   2>/dev/null
+        - nslookup hostyhost.salesforce.com  2>/dev/null
+
+  - step:
+      name: client
+      image: alpine:3.9
+      commands:
+        - apk update && apk add curl
+        - ": ---- my hostname ---------------"
+        - hostname
+        - ": ---- my IP info ---------------"
+        - ip a s eth0
+        - ": ---- container network gateway ---------------"
+        - ip r | awk '$1 == "default" { print $3 }'
+        - ": ---- my hostname in /etc/hosts ---------------"
+        - cat /etc/hosts
+        - ": ---- environment variables furnished by CIX ---------------"
+        - env | grep CIX
+        - ": ---- resolver config ---------------"
+        - cat /etc/resolv.conf
+        - ": ---- DNS for containers ---------------"
+        - nslookup web-server     2>/dev/null
+        - nslookup client         2>/dev/null
+        - nslookup www.google.com 2>/dev/null
+        - ": ---- accessing nginx via well known name ---------------"
+        - curl -sS http://www.salesforce.com/iccyaml.html
+        - ": -------------------"

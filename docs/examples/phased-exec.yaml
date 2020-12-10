@@ -1,0 +1,30 @@
+version: 2.1
+pipeline:
+  - step:
+      name: first
+      image: alpine:3.9
+      commands:
+        - hostname
+  - steps:
+      name: group
+      pipeline:
+        - step:
+            name: second
+            image: alpine:3.9
+            commands:
+              - hostname
+        - step:
+            name: third
+            image: alpine:3.9
+            commands:
+              - hostname
+  - step:
+      name: fourth
+      image: alpine:3.9
+      commands:
+        - hostname
+  - step:
+      name: fifth
+      image: alpine:3.9
+      commands:
+        - hostname

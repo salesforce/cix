@@ -1,0 +1,60 @@
+version: 2.1
+pipeline:
+  - step:
+      name: multi_line_commands
+      image: alpine:3.9
+      environment:
+        - name: FOO
+          value: $$FOO
+          default: 10
+        - name: BAR
+          value: $$BAR
+          default: 1000
+        - name: FOLDED_STRING
+          value: this is a long string that spans
+            multiple lines. It will be folded into
+            a single line. It can be quoted or unquoted.
+        - name: LITERAL_BLOCK
+          value: |-
+            This is a string value which spans multiple lines. Using
+            YAML's Literal Block Scalar operator '|', newlines are
+            preserved in the string. Quotes and other special
+            characters, like the colon, are not evaluated as YAML.
+
+            So, you can include a : colon-space without breaking
+            your file.
+
+            Indentation is required but is not included in the
+            final string.
+
+            When '|' is used on its own without any modifier
+            ('-' or '+'), one newline is kept at the end of
+            the string, additional trailing newlines are clipped.
+
+            The "strip chomp modifier" (|-) removes the
+            trailing newline and any subsequent empty lines
+            from the string.
+
+            The "keep chomp modifier" (|+) preserves all
+            trailing newlines.
+      commands:
+        - echo "FOO is $FOO, BAR is $BAR"
+        # Since this entry does not use any operator, it will be folded into a
+        # single line so semi-colons are needed to separate commands.
+        - if [ $FOO -gt $BAR ];
+          then
+            echo "FOO IS GREATER THAN BAR!";
+          else
+            echo "BAR IS EQUAL TO OR GREATER THAN FOO!";
+          fi
+        # Using the Literal Block Scalar syntax with a leading '|', semi-colons
+        # are not required as the newlines will be preserved. This is the
+        # recommended way to specify multi-line statements.
+        - |
+          if [ $BAR -lt 100 ]; then
+            echo "BAR ($BAR) IS A SMALL NUMBER."
+          else
+            echo "BAR ($BAR) IS A LARGE NUMBER!"
+          fi
+        - echo "$FOLDED_STRING"
+        - echo "$LITERAL_BLOCK"

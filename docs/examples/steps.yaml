@@ -1,0 +1,56 @@
+version: 2.1
+pipeline:
+  - steps:
+      name: 1
+      pipeline:
+      - step:
+          name: 1-1
+          image: alpine:3.9
+          commands:
+            - echo 'steps 1 step 1 (synchronous)'
+      - step:
+          name: 1-2
+          image: alpine:3.9
+          commands:
+            - echo 'steps 1 step 2 (synchronous)'
+      - step:
+          name: 1-3
+          image: alpine:3.9
+          commands:
+            - echo 'steps 1 step 3 (synchronous)'
+  - step:
+      name: 2
+      image: alpine:3.9
+      commands:
+        - echo 'step 2 (synchronous)'
+  - steps:
+      name: 3
+      parallel: true ## if left out, will default to false
+      pipeline:
+      - step:
+          name: 3-1
+          image: alpine:3.9
+          commands:
+            - echo 'steps 3 step 1 (parallel)'
+            - sleep 1
+            - echo 'step 3-1 after sleep (parallel)'
+            - sleep 1
+            - echo 'step 3-1 after sleep (parallel)'
+      - step:
+          name: 3-2
+          image: alpine:3.9
+          commands:
+            - echo 'steps 3 step 2 (parallel)'
+            - sleep 1
+            - echo 'step 3-2 after sleep (parallel)'
+            - sleep 1
+            - echo 'step 3-2 after sleep (parallel)'
+      - step:
+          name: 3-3
+          image: alpine:3.9
+          commands:
+            - echo 'steps 3 step 3 (parallel)'
+            - sleep 1
+            - echo 'step 3-3 after sleep (parallel)'
+            - sleep 1
+            - echo 'step 3-3 after sleep (parallel)'

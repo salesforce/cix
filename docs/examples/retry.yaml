@@ -1,0 +1,10 @@
+version: 2.1
+pipeline:
+  - step:
+      name: retry
+      image: alpine:3.9
+      commands:
+        - "[ $((RANDOM % 10)) -ge 5 ] && exit 1 || exit 0" # randomly pass or fail the command
+      retry:
+        iterations: 10 # retry up to 10 times if one of the commands fails
+        backoff: 1 # sleep for 1 second between the retries
