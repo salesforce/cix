@@ -104,6 +104,7 @@ fi
 # We use this and host headers to set the environment variable CIX_HOSTNAME
 if [[ $1 && $1 != install && $1 != server && ! "$@" =~ --host ]]; then
     SET_HOST="--host 127.0.0.1"
+    SET_DOCKER_NETWORK="--network host"
 fi
 
 # Add docker run environment settings
