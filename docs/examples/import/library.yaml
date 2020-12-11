@@ -1,0 +1,42 @@
+# this yaml file is considered a 'library'
+# you must dot reference the step sets you want to use
+# for example: autobuild-common.setup, autobuild-common.teardown
+imports:
+  common:
+    src: ./common.yaml
+
+phase1: # name this set of steps will be referenced by
+  steps:
+    name: phase1 # any name can be used here, but I'd recommend keeping them the same for sanity purposes
+    pipeline:
+      - import:
+        - common.greetings
+      - step:
+          name: p4-sync
+          image: alpine:3.9
+          environment:
+            - name: P4PORT
+              value: $$P4PORT
+            - name: P4USER
+              value: $$P4USER
+            - name: P4PASSWD
+              value: $$P4PASSWD
+            - name: CHANGELIST
+              value: $$CHANGELIST
+          commands:
+            - echo $P4PORT
+            - echo $P4USER
+            - echo $P4PASSWD
+            - echo $CHANGELIST
+      - import:
+        - common.bbye
+
+phase2:
+  steps:
+    name: phase2
+    pipeline:
+      - step:
+          name: step1
+          image: alpine:3.9
+          commands:
+            - echo phase2-step1

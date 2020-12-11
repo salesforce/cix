@@ -1,0 +1,17 @@
+# to define a full pipeline (meant to be imported and execute in full)
+steps:
+  name: full-pipeline
+  pipeline:
+    - step:
+        name: step1
+        image: alpine:3.9
+        environment:
+          - name: FOO
+            value: $$BAR # disregarded, because it's overwritten by FOO:bar in the import
+        commands:
+          - echo $FOO
+    - step:
+        name: step2
+        image: alpine:3.9
+        commands:
+          - echo step2

@@ -1,0 +1,10 @@
+- [Home](/)
+- Getting Started
+  - [Installing CIX](/getting-started/install.md)
+  - [CIX Pipelines](/getting-started/pipeline.md)
+  - [Running CIX](/getting-started/running.md)
+  - [Basic Concepts](/getting-started/concepts.md)
+- [Tutorials](/tutorials/commands.md)
+- [Reference](/reference/cli.md)
+- [Contributing](development.md)
+- [Release Notes](release-notes.md)

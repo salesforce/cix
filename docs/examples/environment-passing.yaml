@@ -1,0 +1,20 @@
+version: 2.1
+pipeline:
+  - step:
+      name: set
+      image: alpine:3.9
+      commands:
+        - cix-env --action set --name FOO --value bar
+  - step:
+      name: echo
+      image: alpine:3.9
+      environment:
+        - name: FOO
+          value: $$FOO
+      commands:
+        - echo $FOO
+  - step:
+      name: get
+      image: alpine:3.9
+      commands:
+        - cix-env --action get --name FOO

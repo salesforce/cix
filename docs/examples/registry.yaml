@@ -1,0 +1,21 @@
+version: 2.1
+
+registry:
+ # TODO: provide a meaningful repo to test
+ internal-repo.com:
+    username: $$INTERNAL_REPO_USERNAME
+    password: $$INTERNAL_REPO_PASSWORD
+
+pipeline:
+  - step:
+      name: auth-registry-example
+      # TODO: provide a meaningful image to test
+      image: internal-repo.com/private-image
+      commands:
+        - echo "Hello from the authenticated private image"
+  - step:
+      name: docker-hub-example
+      image: alpine:3.9
+      pull-policy: Always
+      commands:
+        - echo "Hello from Docker Hub's public Alpine image"

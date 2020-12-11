@@ -1,0 +1,7 @@
+@import "https://unpkg.com/docsify-themeable/dist/css/theme-simple.css";
+
+:root {
+  --content-max-width : 100em;
+  --sidebar-width: 20em;
+  --theme-color   : orange;
+}

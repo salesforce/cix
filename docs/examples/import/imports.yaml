@@ -1,0 +1,34 @@
+version: 2.1
+imports:
+  full-pipeline:
+    src: ./full-pipeline.yaml
+  library:
+    src: ./library.yaml
+  #
+  # Following is how http(s) based imports can be specified. The token is optional if needed, e.g.,
+  # needed in order to fetch from git.soma
+  #
+  # library:
+  #   src: https://github.com/raw/ci/cix/master/docs/examples/import/library.yaml
+  #   http_authorization_token: $$CIX_GIT_TOKEN # must be passed via -s
+pipeline:
+  - import:
+      - library.phase1:
+          environment:
+            - name: CHANGELIST
+              value: 222123123
+            - name: P4PORT
+              value: ssl:p4proxy.soma.salesforce.com:1999 # dev P4PORT
+            # other environment values will remain the same (that is, P4PORT=$$P4PORT, etc.)
+            # and will be substituted as normal
+      - library.phase2
+  - step:
+      name: basic
+      image: alpine:3.9
+      commands:
+        - hostname
+  - import:
+      - full-pipeline:
+          environment:
+            - name: FOO
+              value: bar # step defined above should output 'bar'

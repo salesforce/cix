@@ -1,0 +1,339 @@
+version: 2.1
+pipeline:
+  - step:
+      name: EQFail
+      image: alpine:3.9
+      when:
+        - operator: EQ
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: EQPass
+      image: alpine:3.9
+      when:
+        - operator: EQ
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 1
+      commands:
+        - echo "yay 1"
+  - step:
+      name: NEQFail
+      image: alpine:3.9
+      when:
+        - operator: NEQ
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 1
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: NEQPass
+      image: alpine:3.9
+      when:
+        - operator: NEQ
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "yay 2"
+  - step:
+      name: GTEFail
+      image: alpine:3.9
+      when:
+        - operator: GTE
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: GTEPass
+      image: alpine:3.9
+      when:
+        - operator: GTE
+          value: $$FOO_CONDITION_VALUE
+          value-default: 3
+          other: $$BAR_CONDITION_VALUE
+          other-default: 3
+      commands:
+        - echo "yay 3"
+  - step:
+      name: GTEPass
+      image: alpine:3.9
+      when:
+        - operator: GTE
+          value: $$FOO_CONDITION_VALUE
+          value-default: 4
+          other: $$BAR_CONDITION_VALUE
+          other-default: 3
+      commands:
+        - echo "yay 4"
+  - step:
+      name: GTFail
+      image: alpine:3.9
+      when:
+        - operator: GT
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: GTFail
+      image: alpine:3.9
+      when:
+        - operator: GT
+          value: $$FOO_CONDITION_VALUE
+          value-default: 2
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: GTPass
+      image: alpine:3.9
+      when:
+        - operator: GT
+          value: $$FOO_CONDITION_VALUE
+          value-default: 4
+          other: $$BAR_CONDITION_VALUE
+          other-default: 3
+      commands:
+        - echo "yay 5"
+  - step:
+      name: GTEFail
+      image: alpine:3.9
+      when:
+        - operator: GTE
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: GTEPass
+      image: alpine:3.9
+      when:
+        - operator: GTE
+          value: $$FOO_CONDITION_VALUE
+          value-default: 3
+          other: $$BAR_CONDITION_VALUE
+          other-default: 3
+      commands:
+        - echo "yay 6"
+  - step:
+      name: GTEPass
+      image: alpine:3.9
+      when:
+        - operator: GTE
+          value: $$FOO_CONDITION_VALUE
+          value-default: 4
+          other: $$BAR_CONDITION_VALUE
+          other-default: 3
+      commands:
+        - echo "yay 7"
+  - step:
+      name: GTFail
+      image: alpine:3.9
+      when:
+        - operator: GT
+          value: $$FOO_CONDITION_VALUE
+          value-default: 1
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: GTFail
+      image: alpine:3.9
+      when:
+        - operator: GT
+          value: $$FOO_CONDITION_VALUE
+          value-default: 2
+          other: $$BAR_CONDITION_VALUE
+          other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: GTPass
+      image: alpine:3.9
+      when:
+        - operator: GT
+          value: $$FOO_CONDITION_VALUE
+          value-default: 4
+          other: $$BAR_CONDITION_VALUE
+          other-default: 3
+      commands:
+        - echo "yay 8"
+  - step:
+      name: ISSetPass
+      image: alpine:3.9
+      when:
+        - operator: IS_SET
+          value: $$FOO_CONDITION_VALUE
+          value-default: yes
+      commands:
+        - echo "yay 9"
+  - step:
+      name: ISSetFail
+      image: alpine:3.9
+      when:
+        - operator: IS_SET
+          value: $$EMPTY_VALUE
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: ISNotSetPass
+      image: alpine:3.9
+      when:
+        - operator: IS_NOT_SET
+          value: $$EMPTY_VALUE
+      commands:
+        - echo "yay 10"
+  - step:
+      name: ISNotSetFail
+      image: alpine:3.9
+      when:
+        - operator: IS_NOT_SET
+          value: $$EMPTY_VALUE
+          value-default: yes
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: EXISTSFail
+      image: alpine:3.9
+      when:
+        - operator: EXISTS
+          value: $$FOO_CONDITION_VALUE
+          value-default: yes
+          values:
+            - value: $$BAR_CONDITION_VALUE_1
+              default: no
+            - value: $$BAR_CONDITION_VALUE_2
+              default: maybe
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: EXISTSPass
+      image: alpine:3.9
+      when:
+        - operator: EXISTS
+          value: $$FOO_CONDITION_VALUE
+          value-default: yes
+          values:
+            - value: $$BAR_CONDITION_VALUE_1
+              default: no
+            - value: $$BAR_CONDITION_VALUE_2
+              default: maybe
+            - value: $$BAR_CONDITION_VALUE_3
+              default: yes
+      commands:
+        - echo "yay 11"
+  - step:
+      name: NOT_EXISTSFail
+      image: alpine:3.9
+      when:
+        - operator: NOT_EXISTS
+          value: $$FOO_CONDITION_VALUE
+          value-default: yes
+          values:
+            - value: $$BAR_CONDITION_VALUE_1
+              default: no
+            - value: $$BAR_CONDITION_VALUE_2
+              default: maybe
+            - value: $$BAR_CONDITION_VALUE_3
+              default: yes
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: NOT_EXISTSPass
+      image: alpine:3.9
+      when:
+        - operator: NOT_EXISTS
+          value: $$FOO_CONDITION_VALUE
+          value-default: yes
+          values:
+            - value: $$BAR_CONDITION_VALUE_1
+              default: no
+            - value: $$BAR_CONDITION_VALUE_2
+              default: maybe
+      commands:
+        - echo "yay 12"
+  - step:
+      name: ORFail
+      image: alpine:3.9
+      when:
+        - operator: OR
+          conditions:
+            - operator: EQ
+              value: $$FOO_CONDITION_VALUE
+              value-default: 1
+              other: $$BAR_CONDITION_VALUE
+              other-default: 2
+            - operator: NEQ
+              value: $$FOO_CONDITION_VALUE
+              value-default: 1
+              other: $$BAR_CONDITION_VALUE
+              other-default: 1
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: ORPass
+      image: alpine:3.9
+      when:
+        - operator: OR
+          conditions:
+            - operator: EQ
+              value: $$FOO_CONDITION_VALUE
+              value-default: 1
+              other: $$BAR_CONDITION_VALUE
+              other-default: 2
+            - operator: NEQ
+              value: $$FOO_CONDITION_VALUE
+              value-default: 2
+              other: $$BAR_CONDITION_VALUE
+              other-default: 1
+      commands:
+        - echo "yay 13"
+  - step:
+      name: INCLUDESPass
+      image: alpine:3.9
+      when:
+        - operator: INCLUDES
+          value: $$FOO_INCLUDES # example value FOO_INCLUDES=foo,bar,baz
+          other: foo
+      commands:
+        - echo "yay 14"
+  - step:
+      name: NOT_INCLUDESPass
+      image: alpine:3.9
+      when:
+        - operator: NOT_INCLUDES
+          value: $$FOO_INCLUDES # example value FOO_INCLUDES=foo,bar,baz
+          other: random
+      commands:
+        - echo "yay 15"

@@ -1,0 +1,22 @@
+version: 2.1
+pipeline:
+  - step:
+      name: sh-echo
+      image: alpine:3.9
+      commands:
+        - echo Hello world
+  - step:
+      name: use-node
+      image: node:12-alpine
+      commands-shell: /usr/bin/env node
+      commands:
+        - console.log('Hello from Node.js');
+        - console.log(`Node ${process.versions.node} v8 ${process.versions.v8}`);
+  - step:
+      name: use-python
+      image: python:3-alpine
+      commands-shell: /usr/bin/env python
+      commands:
+        - import sys
+        - print('Hello from Python')
+        - print(sys.version)

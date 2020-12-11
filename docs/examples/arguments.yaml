@@ -1,0 +1,21 @@
+version: 2.1
+pipeline:
+  - step:
+      name: args-version
+      image: salesforce/cix:latest
+      pull-policy: IfNotPresent
+      environment:
+        - name: CIX_WRAPPER_VERSION
+          value: 8
+      arguments:
+        - -v
+  - step:
+      name: args-command-help
+      image: salesforce/cix:latest
+      pull-policy: IfNotPresent
+      environment:
+        - name: CIX_WRAPPER_VERSION
+          value: 8
+      arguments:
+        - $$COMMAND
+        - --help

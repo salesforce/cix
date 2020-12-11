@@ -1,0 +1,69 @@
+{
+  "name": "cix",
+  "version": "2.4.0",
+  "private": true,
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "itest": "bats test/integration",
+    "clean": "rm -rf .scannerwork coverage node_modules package-lock.json logs test-report.xml",
+    "lint": "eslint src",
+    "lint-fix": "eslint src --fix",
+    "preview-docs": "docsify serve docs",
+    "test": "jest --silent src"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageDirectory": "./coverage",
+    "coverageReporters": [
+      "lcov",
+      "text"
+    ],
+    "testResultsProcessor": "jest-sonar-reporter",
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/setup-test-logger.js"
+    ]
+  },
+  "dependencies": {
+    "ajv": "6.12.4",
+    "axios": "0.20.0",
+    "chalk": "4.1.0",
+    "commander": "6.1.0",
+    "deepdash": "5.3.0",
+    "dockerode": "2.5.8",
+    "ejs": "3.1.5",
+    "express": "4.17.1",
+    "helmet": "4.2.0",
+    "js-yaml": "3.14.0",
+    "lodash": "4.17.20",
+    "readline-sync": "1.4.10",
+    "swagger-client": "3.10.12",
+    "swagger-jsdoc": "4.0.0",
+    "swagger-ui-express": "4.1.4",
+    "tar-stream": "2.1.3",
+    "uuid": "8.3.0",
+    "winston": "3.3.3"
+  },
+  "devDependencies": {
+    "@babel/core": "7.11.6",
+    "@babel/plugin-proposal-class-properties": "7.10.4",
+    "@babel/plugin-syntax-import-meta": "7.10.4",
+    "@babel/preset-env": "7.11.5",
+    "babel-eslint": "10.1.0",
+    "babel-jest": "26.3.0",
+    "bats": "1.1.0",
+    "bats-assert": "2.0.0",
+    "bats-support": "0.3.0",
+    "docsify-cli": "4.4.1",
+    "eslint": "7.8.1",
+    "eslint-config-google": "0.14.0",
+    "eslint-plugin-jsdoc": "30.4.0",
+    "jest": "26.4.2",
+    "jest-cli": "26.4.2",
+    "jest-sonar-reporter": "2.0.0",
+    "jsdoc": "3.6.5",
+    "strip-ansi": "6.0.0",
+    "supertest": "^6.0.1"
+  }
+}

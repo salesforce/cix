@@ -1,0 +1,99 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run cix basic example",
+            "program": "${workspaceFolder}/cix.mjs",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                "LOG_LEVEL": "DEBUG",
+                "CIX_WRAPPER_VERSION": "8"
+            },
+            "runtimeArgs": [
+                "--no-warnings",
+                "--experimental-modules"
+            ],
+            "args": [
+                "exec",
+                "--yaml", "docs/examples/basic.yaml"
+            ],
+            "outputCapture": "std",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run cix preprocessor example",
+            "program": "${workspaceFolder}/cix.mjs",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                "LOG_LEVEL": "SILLY",
+                "CIX_WRAPPER_VERSION": "8"
+            },
+            "runtimeArgs": [
+                "--no-warnings",
+                "--experimental-modules"
+            ],
+            "args": [
+                "exec",
+                "--plugin", "docs/examples/plugins/plugin.yaml",
+                "--yaml", "docs/examples/plugins/test.input"
+            ],
+            "outputCapture": "std",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run cix server",
+            "program": "${workspaceFolder}/cix.mjs",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                "LOG_LEVEL": "DEBUG",
+                "CIX_WRAPPER_VERSION": "8"
+            },
+            "runtimeArgs": [
+                "--no-warnings",
+                "--experimental-modules"
+            ],
+            "args": [
+                "server"
+            ],
+            "outputCapture": "std",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run cix resume",
+            "program": "${workspaceFolder}/cix.mjs",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                "LOG_LEVEL": "DEBUG",
+                "CIX_WRAPPER_VERSION": "8"
+            },
+            "runtimeArgs": [
+                "--no-warnings",
+                "--experimental-modules"
+            ],
+            "args": [
+                "resume"
+            ],
+            "outputCapture": "std",
+            "console": "integratedTerminal"
+        }
+    ]
+}

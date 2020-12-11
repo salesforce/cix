@@ -1,0 +1,11 @@
+version: 2.1
+pipeline:
+  - step:
+      name: ignore-failures
+      image: alpine:3.9
+      commands:
+        ## `set -e` is the default, meaning any failing command will fail the step
+        ## `set +e` will allow any command to fail except the last command
+        - set +e
+        - 'false'
+        - echo 'Hello World'

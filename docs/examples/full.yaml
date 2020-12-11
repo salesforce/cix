@@ -1,0 +1,107 @@
+version: 2.1
+
+registry:
+ # TODO: provide a meaningful repo to test
+ internal-repo.com:
+  username: $$INTERNAL_REPO_USERNAME
+  password: $$INTERNAL_REPO_PASSWORD
+  retry:
+   iterations: 3
+   backoff: 120 
+
+pipeline:
+  - step:
+      name: nginx
+      image: nginx
+      volumes:
+        - /tmp:/usr/share/nginx/html:ro
+      ports:
+        - "8080:80"
+      background: true
+
+  - step:
+      name: echoer
+      image: alpine:3.9
+      commands:
+        - "trap 'echo got TERM signal; exit' TERM"
+        - "while true; do echo Echoer here just poking my head in; sleep 5; done"
+      background: true
+
+  - step:
+      name: firstoutput
+      image: alpine:3.9
+      hostname: container-one.salesforce.com
+      volumes:
+        - /tmp:/tmp
+      commands:
+        - ": This is C1 outputting to stdout"
+        - echo Hello world from C1 - $(hostname) > /tmp/helloworld.txt
+        - ": C1 is finished, exiting with a failure status - which is ignored"
+        - exit 9
+      continue-on-fail: true
+
+  - step:
+      name: secondoutput
+      image: alpine:3.9
+      volumes:
+        - /tmp:/tmp
+      commands:
+        - "echo This is Container 2"
+        - echo Container 2 writing to stderr >&2
+        - echo Container 2 checking in $(hostname) >> /tmp/helloworld.txt
+        - echo Container 2 is finished
+        - exit 0
+
+  - step:
+      name: createhtml
+      image: alpine:3.9
+      environment:
+        - name: USER_MESSAGE
+          value: bazinga
+      commands:
+        - "echo C3: $(hostname) came here to say _${USER_MESSAGE}_ >> /tmp/helloworld.txt"
+        - "echo C3: ok here is one more line >> /tmp/helloworld.txt"
+        - "echo '<html><body><h1>Hello World!</h1>'$(date) on $(hostname)'</body></html>' > /tmp/index.html"
+        - "echo Here\\'s my /tmp"
+        - ls -l /tmp
+        - ": -------------------------------------------------"
+        - ": 'Now go to http://localhost:8080/ in your browser!'"
+        - ": -------------------------------------------------"
+        - sleep 15
+      volumes:
+        - /tmp:/tmp
+
+  - step:
+      name: gethtml
+      image: alpine:3.9
+      commands:
+        - (apk update && apk add curl) >/dev/null
+        - curl -sS http://nginx/
+
+# Requires registry creds
+  - step:
+      name: private-image
+      # TODO: provide a meaningful image to test
+      image: internal-repo.com/private-image
+      continue-on-fail: true
+
+  - step:
+      name: showworkingdir
+      image: alpine:3.9
+      commands:
+        - ": Here is the default working directory:"
+        - pwd
+
+  - step:
+      name: cleanup
+      image: alpine:3.9
+      volumes:
+        - /tmp:/tmp
+      working-dir: /tmp
+      commands:
+        - ": working-dir has been changed to:"
+        - pwd
+        - ": Here are the contents of the helloworld.txt file, before I delete them:"
+        - cat helloworld.txt
+        - rm helloworld.txt
+        - rm index.html

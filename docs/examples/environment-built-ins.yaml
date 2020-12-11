@@ -1,0 +1,14 @@
+version: 2.1
+pipeline:
+  - step:
+      name: environment-built-ins
+      image: alpine:3.9
+      commands:
+        # these are included in each pipeline by default, no need to add them to the environments section.
+        # https://github.com/pages/salesforce/cix/#/reference/environment
+        - echo $CIX_HOSTNAME
+        - echo $CIX_STEP_NAME
+        - echo $CIX_NETWORK_NAME
+        - echo $CIX_CONTAINER_NAME
+        - echo $CIX_EXECUTION_ID
+ 

@@ -1,0 +1,7 @@
+version: 2.1
+pipeline:
+  - step:
+      name: basic
+      image: alpine:3.9
+      commands:
+        - hostname

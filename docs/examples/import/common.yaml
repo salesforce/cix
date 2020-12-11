@@ -1,0 +1,19 @@
+
+greetings:
+  steps:
+    name: greetings
+    pipeline:
+      - step:
+          name: greetings
+          image: alpine:3.9
+          commands:
+            - echo "hi"
+bbye:
+  steps:
+    name: bbye
+    pipeline:
+      - step:
+          name: bbye
+          image: alpine:3.9
+          commands:
+            - echo "bbye"
