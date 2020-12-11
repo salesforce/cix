@@ -103,7 +103,7 @@ fi
 # This is used to ensure we always pass a --host for everything but server.
 # We use this and host headers to set the environment variable CIX_HOSTNAME
 if [[ $1 && $1 != install && $1 != server && ! "$@" =~ --host ]]; then
-    SET_HOST="--host $(hostname)"
+    SET_HOST="--host 127.0.0.1"
 fi
 
 # Add docker run environment settings
