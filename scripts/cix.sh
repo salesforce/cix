@@ -4,7 +4,7 @@ CIX_WRAPPER_VERSION=8
 #
 # Run and update the CIX (CI Executor) container.
 #
-# Refer to https://github.com/pages/salesforce/cix/ for more information on CIX.
+# Refer to https://opensource.salesforce.com/cix/ for more information on CIX.
 #
 # Usage:
 #  cix update           Pull an updated CIX image from the registry.

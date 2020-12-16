@@ -6,7 +6,7 @@ This is the CIX Server API. Contact us on Slack, [#cix-users](https://computeclo
 **Contact information:**  
 ciplatform@salesforce.com  
 
-[Find out more about CIX](https://github.com/pages/salesforce/cix/)
+[Find out more about CIX](https://opensource.salesforce.com/cix/)
 
 ### /pipeline/{pipelineId}/environment
 
