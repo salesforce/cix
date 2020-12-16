@@ -5,7 +5,7 @@ pipeline:
       image: alpine:3.9
       commands:
         # these are included in each pipeline by default, no need to add them to the environments section.
-        # https://github.com/pages/salesforce/cix/#/reference/environment
+        # https://opensource.salesforce.com/cix/#/reference/environment
         - echo $CIX_HOSTNAME
         - echo $CIX_STEP_NAME
         - echo $CIX_NETWORK_NAME

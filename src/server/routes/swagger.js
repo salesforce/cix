@@ -50,7 +50,7 @@ const swaggerDefinition = {
   basePath: '/api',
   externalDocs: {
     description: 'Find out more about CIX',
-    url: 'https://github.com/pages/salesforce/cix/',
+    url: 'https://opensource.salesforce.com/cix/',
   },
 };
 

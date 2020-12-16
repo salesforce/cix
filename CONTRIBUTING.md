@@ -31,11 +31,11 @@ All pull requests should be linked to an Issue.
 
 ## Development Guide
 
-Please reference the [Development Guide](https://github.com/pages/salesforce/cix/#/development) in the official documentation.
+Please reference the [Development Guide](https://opensource.salesforce.com/cix/#/development) in the official documentation.
 
 ## Style Guide
 
-Please reference the [Code Style](https://github.com/pages/salesforce/cix/#/development?id=code-style) section of the development guide in the official documentation. 
+Please reference the [Code Style](https://opensource.salesforce.com/cix/#/development?id=code-style) section of the development guide in the official documentation. 
 
 ## Approvers
 
