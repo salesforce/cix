@@ -23,5 +23,5 @@ jobs:
       - run: docker build . -t salesforce/cix:local
       - run: npm run itest
       - run: docker tag salesforce/cix:local -t ghcr.io/salesforce/cix:latest
-      - run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+      - run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u cix-team --password-stdin
       - run: docker push ghcr.io/salesforce/cix:latest
