@@ -28,5 +28,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: salesforce/cix
+          repository: salesforce/cix/cix
           tag_with_ref: true
