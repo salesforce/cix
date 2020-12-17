@@ -22,6 +22,11 @@ jobs:
       - run: npm run lint
       - run: docker build . -t salesforce/cix:local
       - run: npm run itest
-      - run: docker tag salesforce/cix:local ghcr.io/salesforce/cix:latest
-      - run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u cix-team --password-stdin
-      - run: docker push ghcr.io/salesforce/cix:latest
+      - name: Push to GitHub Packages
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          repository: salesforce/cix
+          tag_with_ref: true
