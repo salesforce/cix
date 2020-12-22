@@ -20,7 +20,7 @@ This method of passing secrets is convenient, but should only be used in select 
 
 ### Secrets passed via stdin
 
-This method of passing secrets to CIX does not expose them to the process table, and allows for integration with all credential helpers (their output can be piped to stdin or an intermediate script in order to format the credentials). You can pass a single secret with `--secret-stdin KEY`, pass multiple secrets in JSON format with `--secrets-stdin` and prompt the user for a single secret with `--secret-prompt KEY`. 
+This method of passing secrets to CIX does not expose them to the process table, and allows for integration with all credential helpers (their output can be piped to stdin or an intermediate script in order to format the credentials). You can pass a single secret with `--secret-stdin KEY`, pass multiple secrets in JSON format with `--secrets-stdin` and prompt the user for a single secret with `--secret-prompt KEY`.
 
 If you are planning on passing multiple credentials to CIX via the `--secrets-stdin` CLI option, [jq](https://stedolan.github.io/jq/) is a handy utility to properly format JSON data. The JSON object passed is a list of the key-value paired secrets. If you need to pass secrets from more than one credential helper, you will likely need to write your own script to gather the credentials and format them.
 

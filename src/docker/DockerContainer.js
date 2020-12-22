@@ -133,7 +133,7 @@ export default class DockerContainer {
       containerSpec.WorkingDir = definition['working-dir'];
     }
 
-    if (!_.isNil(definition.privileged)) {
+    if (definition.privileged) {
       containerSpec.Privileged = true;
     }
 

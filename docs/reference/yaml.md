@@ -2,10 +2,10 @@
 
 Your guide to every YAML attribute available in CIX 2.1.
 
-[Error loading section, please refresh](../shared/yaml-syntax.md ':include') 
+[Error loading section, please refresh](../shared/yaml-syntax.md ':include')
 
-[Error loading section, please refresh](../shared/concepts.md ':include') 
- 
+[Error loading section, please refresh](../shared/concepts.md ':include')
+
 ## Complete CIX 2.1 YAML
 
 ```yaml
@@ -44,6 +44,7 @@ pipeline:
       volumes:
         - "/path:/path[:ro]"
       hostname: string
+      workspace-mount-point: /cix/src
       working-dir: /path
       background: false | true
       privileged: false | true
@@ -52,7 +53,7 @@ pipeline:
           value: string
           default: string
       when:
-        - operator: EQ | NEQ | IS_SET | IS_NOT_SET | GTE | GT | LTE | LT | EXISTS | NOT_EXISTS | OR | INCLUDES | NOT_INCLUDES
+        - operator: EQ | NEQ | IS_SET | IS_NOT_SET | GTE | GT | LTE | LT | EXISTS | NOT_EXISTS | OR | INCLUDES | NOT_INCLUDES | STARTS_WITH | ENDS_WITH
           value: $$VALUE
           value-default: default-value
           other: $$OTHER
@@ -160,7 +161,7 @@ commands:
   - echo Hello world
   - cp /src/file /tmp
 ```
- 
+
 ##### Tips & Caveats for `commands` {docsify-ignore}
 
 The YAML "literal block scalar" operator is great for specifying multi-line expressions. It avoids having to escape special
@@ -214,7 +215,7 @@ last command's status will be used to determine the outcome of the step.
 [Error loading section, please refresh](../shared/environment.md ':include')
 
 #### hostname {docsify-ignore}
- 
+
 String.
 
 Specifies an alias hostname for the container, in addition to the step name. Any hostname can be chosen, from a
@@ -250,7 +251,7 @@ The name of the image for this step. If the image resides on an authenticated re
 Integer.
 
 Causes the step to be repeated the number of times specified.
- 
+
 #### name {docsify-ignore}
 
 String. Required.
@@ -268,7 +269,7 @@ need to be exposed. All ports are reachable within the CIX network.
 Ports are specified in the form: `external-port “:” internal-port “/” optional-protocol` (protocol is `tcp` or `udp`).
 TCP is the default protocol.
 
-Ports may also be specified as a single integer, in which case the same port is used both internally and externally. 
+Ports may also be specified as a single integer, in which case the same port is used both internally and externally.
 
 ```
 ports:
@@ -323,7 +324,7 @@ retry:
   iterations: 3
   backoff: 30
 ```
-  
+
 #### timeout {docsify-ignore}
 
 Integer, in seconds.
@@ -348,6 +349,13 @@ String, default `/cix/src`.
 
 Specifies an alternative current-working-directory when the container starts.
 
+#### workspace-mount-point {docsify-ignore}
+
+String, default `/cix/src`.
+
+Specifies an alternative location where the workspace (typically the current directory on the host or the directory
+provided to `cix` with the `-w --workspace` option) will be mounted in the container.
+
 ## Advanced Topics
 
 ### steps {docsify-ignore}
@@ -365,7 +373,7 @@ pipeline:
         - step:
             . . .
 ```
- 
+
 #### name {docsify-ignore}
 
 String. Required.

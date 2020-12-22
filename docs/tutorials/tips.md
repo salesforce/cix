@@ -14,7 +14,7 @@ cix exec -y docs/examples/docker.yaml
 ```
 
 ### Set +e
-?> The default commands mode is `set -e` or 'fail on error.' You can easily change the mode from within your commands set with `set +e`. 
+?> The default commands mode is `set -e` or 'fail on error.' You can easily change the mode from within your commands set with `set +e`.
 See the demo for an example of this behavior change in action.
 
 * [docs/examples/set_plus_e.yaml](https://github.com/salesforce/cix/blob/master/docs/examples/set_plus_e.yaml) 

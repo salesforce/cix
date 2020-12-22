@@ -239,6 +239,24 @@ describe('Step definition transformation', () => {
     });
   });
 
+  test('createContainerSpec() sets WorkingDir', () => {
+    const step = {
+      'name': 'step-name',
+      'working-dir': '/cix/src',
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.WorkingDir).toEqual('/cix/src');
+  });
+
+  test('createContainerSpec() sets Privileged mode', () => {
+    const step = {
+      name: 'step-name',
+      privileged: true,
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.Privileged).toEqual(true);
+  });
+
   test('createContainerSpec() configures unattached container', () => {
     dockerContainer.networkName = undefined;
     const step = {

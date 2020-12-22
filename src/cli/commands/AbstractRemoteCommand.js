@@ -115,7 +115,6 @@ export default class AbstractRemoteCommand extends AbstractCommand {
       log.info('Pipeline completed successfully.');
       break;
     case 'failed':
-      console.log('about to throw.');
       throw new ExecutionError('Pipeline has failed.');
     default:
       throw new ExecutionError(`Pipeline is in an unexpected state: ${status}`);

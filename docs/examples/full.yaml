@@ -7,7 +7,7 @@ registry:
   password: $$INTERNAL_REPO_PASSWORD
   retry:
    iterations: 3
-   backoff: 120 
+   backoff: 120
 
 pipeline:
   - step:

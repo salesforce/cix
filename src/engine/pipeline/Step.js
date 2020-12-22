@@ -188,14 +188,18 @@ export default class Step extends PipelineNode {
   modifyDefinition() {
     const DEFAULT_WORKSPACE_MOUNT = '/cix/src';
 
-    // ensure names which are numbers now strings
+    // ensure names are strings
     this.definition.name = `${this.definition.name}`;
 
+    if (_.isNil(this.definition['workspace-mount-point'])) {
+      this.definition['workspace-mount-point'] = DEFAULT_WORKSPACE_MOUNT;
+    }
+
     // set the workspace path to attach to /cix/src in the image (should be mounted first)
-    this.definition.volumes = _.concat(`${this.getWorkspacePath()}:${DEFAULT_WORKSPACE_MOUNT}`, this.definition.volumes || []);
+    this.definition.volumes = _.concat(`${this.getWorkspacePath()}:${this.definition['workspace-mount-point']}`, this.definition.volumes || []);
 
     if (_.isNil(this.definition['working-dir'])) {
-      this.definition['working-dir'] = DEFAULT_WORKSPACE_MOUNT;
+      this.definition['working-dir'] = this.definition['workspace-mount-point'];
     }
 
     if (this.getRegistries()) {

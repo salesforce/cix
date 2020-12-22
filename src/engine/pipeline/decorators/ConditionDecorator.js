@@ -163,6 +163,8 @@ const EVALUATORS = {
   LT: createSimpleEvaluator(_.lt),
   INCLUDES: createSimpleEvaluator(_.includes),
   NOT_INCLUDES: createSimpleEvaluator(_.negate(_.includes)),
+  STARTS_WITH: createSimpleEvaluator(_.startsWith),
+  ENDS_WITH: createSimpleEvaluator(_.endsWith),
   EXISTS,
   NOT_EXISTS,
   OR: OREvaluator,

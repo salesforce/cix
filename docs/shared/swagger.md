@@ -3,8 +3,8 @@ This is the CIX Server API. Contact us on Slack, [#cix-users](https://computeclo
 
 ## Version: 2.2.2
 
-**Contact information:**  
-ciplatform@salesforce.com  
+**Contact information:**
+ciplatform@salesforce.com
 
 [Find out more about CIX](https://opensource.salesforce.com/cix/)
 

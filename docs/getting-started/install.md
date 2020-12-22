@@ -31,7 +31,7 @@ docker run --rm salesforce/cix:latest install | sudo sh
 To update the CIX Image and wrapper script, run the following commands:
 ```bash
 # Updates the CIX Docker Image
-cix update 
+cix update
 # Updates the CIX Wrapper Script
 docker run --rm salesforce/cix:latest install | sudo sh
 ```

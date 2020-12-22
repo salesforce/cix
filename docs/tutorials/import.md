@@ -1,17 +1,17 @@
 # Importing Files
 
-CIX allows users to split up their pipeline into multiple files. This can be useful when sharing common pipeline code between different pipelines to reduce duplication. 
+CIX allows users to split up their pipeline into multiple files. This can be useful when sharing common pipeline code between different pipelines to reduce duplication.
 
 There are two types of imports. Importing whole pipelines, and importing individual steps from shared libraries.
 
 ## Importing whole pipelines
 
-CIX `imports` allow users to include a full standalone pipeline from another file. 
+CIX `imports` allow users to include a full standalone pipeline from another file.
 
 Example:
 
 full-pipeline.yaml
-```yaml 
+```yaml
 version: 2.1
 pipeline:
   - step:
@@ -29,7 +29,7 @@ cix exec -y full-pipeline.yaml -e FOO=hi
 ```
 
 cix.yaml
-```yaml 
+```yaml
 version: 2.1
 imports:
   full-pipeline:
@@ -51,7 +51,7 @@ This pipeline imports full-pipeline and sets FOO to `test`.
 cix exec -y cix.yaml
 ```
 
-## Importing sections from a library file. 
+## Importing sections from a library file.
 
 Users can create a library YAML, which cannot be run standalone. Using a library YAML allows users to selectively import `steps` from that file by name. `steps` can contain just a single `step` or multiple nested `steps`.
 
@@ -69,7 +69,7 @@ setup: # name this set of steps will be referenced by
             - echo "performs some sync operation"
 cleanup:
   steps:
-    name: cleanup 
+    name: cleanup
     pipeline:
       - step:
           name: restore
@@ -77,10 +77,10 @@ cleanup:
           commands:
             - echo "performs some cleanup operation"
 ```
-!> Notice the library.yaml does not include the `version` attribute or begin with `pipeline`. Library files cannot be executed on their own. 
+!> Notice the library.yaml does not include the `version` attribute or begin with `pipeline`. Library files cannot be executed on their own.
 
 cix.yaml
-```yaml 
+```yaml
 version: 2.1
 imports:
   library:
@@ -96,13 +96,13 @@ pipeline:
   - import:
       - library.cleanup
 ```
-To import a section of the library file, simply just use `.` notation for the qualified name of the step. 
+To import a section of the library file, simply just use `.` notation for the qualified name of the step.
 
 ## Importing from GIT
-!> Experimental feature. 
+!> Experimental feature.
 !> To use GIT, the user must supply a GIT Auth Token environment variable called HTTP_AUTHORIZATION_TOKEN
 
-There are two ways to use GIT. 
+There are two ways to use GIT.
 
 The first way is you can load a git URL from the command line:
 ```

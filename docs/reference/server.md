@@ -6,7 +6,7 @@ Refer to the [CLI Reference](/reference/cli) for more details.
 
 How to update this page:
 ```shell
-cix server 
+cix server
 # another terminal
 curl -O http://localhost:10030/api-docs/swagger.json
 npx swagger-markdown -i swagger.json -o docs/shared/swagger.md
@@ -16,4 +16,4 @@ npx swagger-markdown -i swagger.json -o docs/shared/swagger.md
 
 ---
 
-[Error loading section, please refresh](../shared/swagger.md ':include') 
+[Error loading section, please refresh](../shared/swagger.md ':include')

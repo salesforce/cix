@@ -40,7 +40,7 @@ LOG_LEVEL=ERROR cix exec -y docs/examples/basic.yaml
 
 ## cix exec
 
-Exec loads and executes pipelines in a single command. To load a pipeline without starting it please see [`cix load`](/reference/cli?id=cix-load). You can also chain pipelines or add setup and teardown pipelines. For more on this feature check out [Chaining Pipelines](tutorials/chaining).
+Exec loads and executes pipelines in a single command. To load a pipeline without starting it please see [`cix load`](/reference/cli?id=cix-load). You can also chain pipelines or add setup and teardown pipelines. For more on this feature check out [Chaining Pipelines](tutorials/multiple-pipelines?id=chaining-pipelines).
 
 > You can run this exec against a remote cix server using `--remote`. If you run exec remotely, the file will need to exist on the remote server. The default action is to exec locally.
 

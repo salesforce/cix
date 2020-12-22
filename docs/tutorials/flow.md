@@ -1,6 +1,6 @@
 # Retry, Timeouts and Loops
 
-Several flow control mechanisms are available as attributes you can apply to a step. Their purpose is, generally, to allow users to avoid implementing a command line solution for looping and retry mechanics within steps. 
+Several flow control mechanisms are available as attributes you can apply to a step. Their purpose is, generally, to allow users to avoid implementing a command line solution for looping and retry mechanics within steps.
 
 In order to illustrate the differences in readability and ease of understanding between a bash implementation and a pure CIX implementation of retry:
 
@@ -47,7 +47,7 @@ cix exec -y docs/examples/loop.yaml -e LOOPS=3
 ```
 
 ### Retry
-Learn how to use CIX's retry mechanism. The retry will kickoff if a non-0 exit code is encountered in an iteration. 
+Learn how to use CIX's retry mechanism. The retry will kickoff if a non-0 exit code is encountered in an iteration.
 A pipeline failure will only occur if the last retry iteration ran causes a non-0 exit code.
 
 * [docs/examples/retry.yaml](https://github.com/salesforce/cix/blob/master/docs/examples/retry.yaml) 
@@ -61,8 +61,8 @@ cix exec -y docs/examples/retry.yaml
 ```
 
 ### Timeouts
-Learn how to use CIX's timeout mechanism. The demo's step will randomly sleep for 15 seconds. Try to experiment with the 
-timeout values on your own, to get an idea of how it will function in your substrate. As an example, a timeout of 15 seconds on a step containing only a `sleep 15` will always cause a timeout exception, 
+Learn how to use CIX's timeout mechanism. The demo's step will randomly sleep for 15 seconds. Try to experiment with the
+timeout values on your own, to get an idea of how it will function in your substrate. As an example, a timeout of 15 seconds on a step containing only a `sleep 15` will always cause a timeout exception,
 given the timeout applies to the step overall (including pulling the image, starting the image, etc.).
 
 * [docs/examples/timeout.yaml](https://github.com/salesforce/cix/blob/master/docs/examples/timeout.yaml) 

@@ -533,6 +533,7 @@ export default class Pipeline {
    */
   async describeSequence() {
     await this.loadAndValidate();
+
     const expectedEnvironment = new Set(); // Ensures uniqueness of keys in subsequent array
 
     // Used a recursive function to iterate through the steps
@@ -628,10 +629,10 @@ export default class Pipeline {
    * @async
    */
   async start() {
-    await this.loadAndValidate();
-    log.debug('Creating new container executor.');
-    this.setStatus(Pipeline.STATUS.initializing);
     try {
+      await this.loadAndValidate();
+      log.debug('Creating new container executor.');
+      this.setStatus(Pipeline.STATUS.initializing);
       await this.getExec().init(this);
       this.setStatus(Pipeline.STATUS.running);
       await this.getPipelineTreeRoot().start();
@@ -669,7 +670,12 @@ export default class Pipeline {
    */
   async resume(step) {
     if (!this.isTerminal()) {
-      await this.loadAndValidate();
+      try {
+        await this.loadAndValidate();
+      } catch (err) {
+        this.setStatus(Pipeline.STATUS.failed);
+        throw err;
+      }
 
       if (step) {
         this.setBreakpoint(step);

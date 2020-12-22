@@ -60,4 +60,4 @@ cix exec -y docs/examples/icc.yaml
 
 ---
 
-In the [next section](tutorials/phased-exec.md) we'll learn how to pause and resume pipelines. 
+In the [next section](tutorials/phased-exec.md) we'll learn how to pause and resume pipelines.

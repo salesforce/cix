@@ -71,7 +71,14 @@ export default class Plugin {
   async runPreprocessor(exec, pipelineDefinition) {
     if (this.preprocessor) {
       log.info(`Running preprocessor ${this.preprocessor.image} for plugin ${this.getId()}`);
-      pipelineDefinition = exec.runPreprocessor(this.preprocessor.image, pipelineDefinition);
+      const result = await exec.runPreprocessor(this.preprocessor.image, pipelineDefinition);
+
+      if (result.status == 0) {
+        pipelineDefinition = result.output;
+      } else {
+        log.error(`The preprocessor has returned a non-zero exit code (${result.status}):\n${result.output}`);
+        throw new PluginError(`The preprocessor has returned a non-zero exit code (${result.status}).`);
+      }
     } else {
       log.debug(`Skipping preprocessor for plugin ${this.getId()}.`);
     }

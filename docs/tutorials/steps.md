@@ -1,6 +1,6 @@
 # Grouped Steps
 
-The YAML attribute `steps` (please note the pluralization) is a grouping of one or more `step` attributes. 
+The YAML attribute `steps` (please note the pluralization) is a grouping of one or more `step` attributes.
 
 The syntax is as follows:
 ```yaml

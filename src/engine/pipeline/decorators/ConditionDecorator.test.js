@@ -187,4 +187,74 @@ describe('ConditionDecorator:', () => {
     expect(response).toBeInstanceOf(Provider.SimpleProvider);
     expect(response).not.toEqual(promiseProvider);
   });
+
+  test('Returns provided promiseProvider on STARTS_WITH isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'STARTS_WITH',
+          'value': 'foobar',
+          'other': 'foo',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment()};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toEqual(promiseProvider);
+  });
+
+  test('Returns provided promiseProvider on STARTS_WITH !isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'STARTS_WITH',
+          'value': 'notfoobar',
+          'other': 'foo',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toBeInstanceOf(Provider.SimpleProvider);
+    expect(response).not.toEqual(promiseProvider);
+  });
+
+  test('Returns provided promiseProvider on ENDS_WITH isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'ENDS_WITH',
+          'value': 'foobar',
+          'other': 'bar',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment()};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toEqual(promiseProvider);
+  });
+
+  test('Returns provided promiseProvider on ENDS_WITH !isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'ENDS_WITH',
+          'value': 'foobarnot',
+          'other': 'bar',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toBeInstanceOf(Provider.SimpleProvider);
+    expect(response).not.toEqual(promiseProvider);
+  });
 });

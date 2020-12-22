@@ -1,19 +1,19 @@
 ## CIX Pipeline Introduction
 
-CIX pipelines are written in YAML. If you are unfamiliar with YAML, please review the [YAML Syntax section below](#yaml-syntax). 
+CIX pipelines are written in YAML. If you are unfamiliar with YAML, please review the [YAML Syntax section below](#yaml-syntax).
 
 A pipeline is a series of steps. In a most basic pipeline, each step is executed sequentially, and usually includes a name, docker image, and set of commands. Like so:
 ```yaml
 step:
   name: hello_world
   image: alpine:3.9
-  commands: 
+  commands:
     - echo "hello world"
 ```
 
 > 💡Tip: Use an editor like [VS Code](https://code.visualstudio.com/) with a [YAML linter](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) to avoid common whitespace typos.
 
-Every CIX pipeline must contain a `version` and `pipeline` attribute. Here is a complete CIX YAML with two steps run sequentially. 
+Every CIX pipeline must contain a `version` and `pipeline` attribute. Here is a complete CIX YAML with two steps run sequentially.
 ```yaml
 version: 2.1
 pipeline:
