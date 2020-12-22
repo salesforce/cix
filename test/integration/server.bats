@@ -1,4 +1,4 @@
-#!/usr/bin/env bats 
+#!/usr/bin/env bats
 load '../../node_modules/bats-support/load'
 load '../../node_modules/bats-assert/load'
 load 'helper'

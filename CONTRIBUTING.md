@@ -9,10 +9,10 @@
 ## Submitting a bug report
 
 - All bug reports should be documented as Issues against this repo.
-  - Please include all relevant information necessary to reproduce an issue. 
+  - Please include all relevant information necessary to reproduce an issue.
     - Step by step instructions to reproduce bug
     - For the fastest response, yaml that succinctly reproduces the issue.
-    - Output of the following commands: 
+    - Output of the following commands:
       - `cix -v`
       - `docker -v`
     - Host OS version
@@ -39,7 +39,7 @@ Please reference the [Code Style](https://opensource.salesforce.com/cix/#/develo
 
 ## Approvers
 
-Currently, at least one (1) approver must be part of the CIX core contributor team. 
+Currently, at least one (1) approver must be part of the CIX core contributor team.
 
 # Code of Conduct
 
@@ -51,8 +51,8 @@ culture where everyone feels included.
 
 Salesforce open-source projects are committed to providing a friendly, safe, and
 welcoming environment for all, regardless of gender identity and expression,
-sexual orientation, disability, physical appearance, body size, ethnicity, nationality, 
-race, age, religion, level of experience, education, socioeconomic status, or 
+sexual orientation, disability, physical appearance, body size, ethnicity, nationality,
+race, age, religion, level of experience, education, socioeconomic status, or
 other similar personal characteristics.
 
 The goal of this code of conduct is to specify a baseline standard of behavior so
@@ -68,9 +68,9 @@ Open Source Conduct Committee at ossconduct@salesforce.com.
 
 In the interest of fostering an open and welcoming environment, we as
 contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of gender 
-identity and expression, sexual orientation, disability, physical appearance, 
-body size, ethnicity, nationality, race, age, religion, level of experience, education, 
+our community a harassment-free experience for everyone, regardless of gender
+identity and expression, sexual orientation, disability, physical appearance,
+body size, ethnicity, nationality, race, age, religion, level of experience, education,
 socioeconomic status, or other similar personal characteristics.
 
 ## Our Standards
@@ -120,23 +120,23 @@ further defined and clarified by project maintainers.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the Salesforce Open Source Conduct Committee 
-at ossconduct@salesforce.com. All complaints will be reviewed and investigated 
-and will result in a response that is deemed necessary and appropriate to the 
-circumstances. The committee is obligated to maintain confidentiality with 
-regard to the reporter of an incident. Further details of specific enforcement 
+reported by contacting the Salesforce Open Source Conduct Committee
+at ossconduct@salesforce.com. All complaints will be reviewed and investigated
+and will result in a response that is deemed necessary and appropriate to the
+circumstances. The committee is obligated to maintain confidentiality with
+regard to the reporter of an incident. Further details of specific enforcement
 policies may be posted separately.
 
 Project maintainers who do not follow or enforce the Code of Conduct in good
 faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership and the Salesforce Open Source Conduct 
+members of the project's leadership and the Salesforce Open Source Conduct
 Committee.
 
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant][contributor-covenant-home],
-version 1.4, available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html. 
-It includes adaptions and additions from [Go Community Code of Conduct][golang-coc], 
+version 1.4, available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html.
+It includes adaptions and additions from [Go Community Code of Conduct][golang-coc],
 [CNCF Code of Conduct][cncf-coc], and [Microsoft Open Source Code of Conduct][microsoft-coc].
 
 This Code of Conduct is licensed under the [Creative Commons Attribution 3.0 License][cc-by-3-us].

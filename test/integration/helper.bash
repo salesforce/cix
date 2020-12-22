@@ -64,7 +64,7 @@ function configure_cix(){
   if [ -z "$LOG_LEVEL" ]; then
     export LOG_LEVEL=INFO
   fi
-  
+
   export CIX_SCRIPT_WITH_TTY="faketty ./scripts/cix.sh"
   export CIX_SCRIPT="./scripts/cix.sh"
 }

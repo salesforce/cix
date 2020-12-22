@@ -168,7 +168,7 @@ export default class Server {
       remoteAddress = '127.0.0.1';
     }
     log.debug(`${remoteAddress} ${req.method} ${req.originalUrl} received`);
-    log.silly(`Message ${JSON.stringify(req.body, null, 4)}`);
+    log.silly(`Express Logger Message: ${JSON.stringify(req.body, null, 4)}`);
     res.on('finish', function() {
       log.debug(`${remoteAddress} ${req.method} ${req.originalUrl} ${res.statusCode}`);
     });

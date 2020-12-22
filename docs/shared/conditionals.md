@@ -42,6 +42,7 @@ The following operators are defined:
 | `EQ`, `NEQ` | Equality/Non-equality of 'value' to 'other' | (1) value, other, value-default, other-default |
 | `GTE`, `GT`, `LTE`, `LT` | Numeric or String (lexical) comparison of 'value' to 'other' | (1) value, other, value-default, other-default |
 | `INCLUDES`, `NON_INCLUDES` | Substring comparison -- does 'value' include the string 'other' | (1) value, other, value-default, other-default |
+| `STARTS_WITH`, `ENDS_WITH` | String prefix and suffix comparison -- does 'value' start with or end with the string 'other' | (1) value, other, value-default, other-default |
 | `EXISTS`, `NON_EXISTS` | List membership -- is 'value' among 'values' | (2) value, value-default, values |
 | `OR` | Alternation | `conditions`, a list of operator/value attributes as above |
 

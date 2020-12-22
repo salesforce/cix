@@ -337,3 +337,45 @@ pipeline:
           other: random
       commands:
         - echo "yay 15"
+  - step:
+      name: STARTS_WITHPass
+      image: alpine:3.9
+      when:
+        - operator: STARTS_WITH
+          value: $$FOO_STARTS_WITH # example value FOO_STARTS_WITH=foobar
+          value-default: foobar
+          other: foo
+      commands:
+        - echo "yay 16"
+  - step:
+      name: STARTS_WITHFail
+      image: alpine:3.9
+      when:
+        - operator: STARTS_WITH
+          value: $$FOO_STARTS_WITH # example value FOO_STARTS_WITH=foobar
+          value-default: foobar
+          other: bar
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: ENDS_WITHPass
+      image: alpine:3.9
+      when:
+        - operator: ENDS_WITH
+          value: $$FOO_ENDS_WITH # example value FOO_ENDS_WITH=foobar
+          value-default: foobar
+          other: bar
+      commands:
+        - echo "yay 17"
+  - step:
+      name: ENDS_WITHFail
+      image: alpine:3.9
+      when:
+        - operator: ENDS_WITH
+          value: $$FOO_ENDS_WITH # example value FOO_ENDS_WITH=foobar
+          value-default: foobar
+          other: foo
+      commands:
+        - echo "shouldn't run"
+        - exit 1

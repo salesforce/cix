@@ -1,12 +1,13 @@
 # CIX Release Notes
-### 2.4.1-pre
-* `exec --remote`, `resume` and `next` block execution of the client until either the pipeline is paused or becomes terminal. 
+### 2.4.1
+* `exec --remote`, `resume` and `next` block execution of the client until either the pipeline is paused or becomes terminal.
 * `exec --remote`, `resume` and `next` can also now stream logs from the server and display them on the client.
 * Updated `--env` and `--secret` with the ability to pass environment variables by name only, using their values from the calling environment.
 * Added the `arguments` step attribute so additional parameters can be provided to an image's default ENTRYPOINT command.
 * Detach from the console when starting the CIX server (`cix server` command).
-* Migrated from custom nodejs base image to new common Strata nodejs base image. 
-* NPM dependency cleanup and upgrades. 
+* Migrated from custom nodejs base image to new common Strata nodejs base image.
+* NPM dependency cleanup and upgrades.
+* Added the `workspace-mount-point` step attribute to specify a different target to mount the workspace directory in the container.
 
 ### 2.4.0
 * Added a plugin framework to CIX. The first feature to take advantage of the new framework is "preprocessors." A preprocessor allows a non-native pipeline to be transformed into a valid CIX pipeline before execution.

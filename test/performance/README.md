@@ -1,10 +1,10 @@
 d### Performance tests
-Below are some notes on how to performance test CIX. 
+Below are some notes on how to performance test CIX.
 
 ## Logging
 
 # Confirming pipeline streams are getting destroyed.
-We create a log stream for each pipeline. This log stream can buffer up to 18MB and should be destroyed at the end of an pipeline execution. To test this we can output a large amount of logs repeatedly with no remote client draining the stream.  
+We create a log stream for each pipeline. This log stream can buffer up to 18MB and should be destroyed at the end of an pipeline execution. To test this we can output a large amount of logs repeatedly with no remote client draining the stream.
 
 1. Run CIX repeatedly ``./cix.mjs exec -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml -y performance/heavy_logging.yaml > perf.log``
 2. Watch memory usage for continual growth (Activity Monitor on MacOS does the trick)
@@ -21,5 +21,5 @@ If logs are getting generated faster than the client can read them, shed some of
 
 1. Start a CIX Server ``./cix.mjs server -l console``
 2. Run a pipeline at 64kbps throughput (about 2min to download, pipeline generates 100MB in 30sec) ``./cix.mjs load -y performance/heavy_logging.yaml && curl -s --limit-rate 64k -X GET "http://localhost:10030/api/pipeline/undefined/start" -H  "accept: application/json" > client.log``
-3. You should see the  echo "complete" at the end of the server log. This means the back pressure didn't effect the execution. 
+3. You should see the  echo "complete" at the end of the server log. This means the back pressure didn't effect the execution.
 4. You should see the size of the client log is quite a bit smaller, that's because it didn't stream all the logs.

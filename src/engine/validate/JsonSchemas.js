@@ -73,6 +73,9 @@ export const stepSchema = {
     'working-dir': {
       'type': 'string',
     },
+    'workspace-mount-point': {
+      'type': 'string',
+    },
     'arguments': {
       'type': 'array',
       'items': {

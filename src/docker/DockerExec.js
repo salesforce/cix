@@ -235,6 +235,7 @@ export default class DockerExec {
       'name': 'cix-prepro',
       'image': image,
       'pull-policy': 'IfNotPresent',
+      'continue-on-fail': true,
     };
 
     const container = new DockerContainer(this.dockerApi, `cix-${_.randomString(8)}`);
@@ -242,14 +243,12 @@ export default class DockerExec {
     const chunks = [];
     let containerOutput = '';
 
-    // Create a stream to capture the container's stdout and store it in a string.
+    // Create a stream to capture the container's stdout/stderr
     const outputStream = new stream.Writable();
-
     outputStream._write = (chunk, _encoding, next) => {
       chunks.push(chunk);
       next();
     };
-
     outputStream._final = (finalizer) => {
       containerOutput = Buffer.concat(chunks).toString('utf8');
       finalizer();
@@ -257,19 +256,15 @@ export default class DockerExec {
 
     await container.create(definition, data);
     this.trackContainer(container);
-    // TODO: log stderr using ContainerLogger.
-    const statusCode = await container.start(outputStream, NodeProvider.getProcess().stderr);
+
+    const statusCode = await container.start(outputStream, outputStream);
 
     // Ensure stream is closed and writing is finished.
     outputStream.end();
     const finished = util.promisify(stream.finished);
     await finished(outputStream);
 
-    if (statusCode != 0) {
-      return null;
-    } else {
-      return containerOutput;
-    }
+    return {status: statusCode, output: containerOutput};
   }
 
   /**
@@ -309,14 +304,15 @@ export default class DockerExec {
       });
     }
 
-    const network = this.dockerApi.getNetwork(this.getNetworkName());
+    if (this.getNetworkName() != undefined) {
+      log.debug(`Removing network ${this.getNetworkName()}`);
 
-    log.debug(`Removing network ${this.getNetworkName()}`);
-
-    try {
-      await network.remove(this.getNetworkName());
-    } catch (err) {
-      log.error(`Failed to remove network ${this.getNetworkName()}: \n\t${err}\n`);
+      const network = this.dockerApi.getNetwork(this.getNetworkName());
+      try {
+        await network.remove(this.getNetworkName());
+      } catch (err) {
+        log.error(`Failed to remove network ${this.getNetworkName()}: \n\t${err}\n`);
+      }
     }
 
     await _.each(this.getVolumes(), async (volume) => {

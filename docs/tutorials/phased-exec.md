@@ -2,13 +2,13 @@
 
 Phased execution is designed to load and run a pipeline incrementally rather than all at once like with `cix exec`.
 
-Phased execution is a collection of different command line tools. Here are some of these commands at a high level, more details are provided in the sections below. 
+Phased execution is a collection of different command line tools. Here are some of these commands at a high level, more details are provided in the sections below.
 * `cix server` - starts up a remote CIX server.
 * `cix load -y some/path/cix.yaml` - loads a pipeline, but doesn't start it.
 * `cix describe` - describes the steps within the previously loaded pipeline.
 * `cix resume --to 'step-name'` - will run up to and including the named step 'step-name', then pause.
 * `cix resume --next` - will run the next step of the pipeline, then pause.
-* `cix resume` - will run the pipeline to completion. 
+* `cix resume` - will run the pipeline to completion.
 
 
 ## Loading a pipeline
@@ -24,7 +24,7 @@ Let's load a pipeline:
 cix load -y docs/examples/phased-exec.yaml
 ```
 
-Load works just like `cix exec`, you can provide environment variables and secrets. 
+Load works just like `cix exec`, you can provide environment variables and secrets.
 
 ```shell
 cix load -y docs/examples/phased-exec.yaml -e FOO='foo' -s P4_PASSWORD='password'
@@ -124,9 +124,9 @@ cix load -y docs/examples/phased-exec.yaml # from previous section
 cix describe
 ```
 
-Then run each step, one at a time. 
+Then run each step, one at a time.
 ```shell
-cix resume --next 
+cix resume --next
 echo "ran first step"
 cix resume --next
 echo "ran second step"

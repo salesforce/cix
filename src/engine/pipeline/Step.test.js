@@ -193,4 +193,19 @@ describe('Step tests:', () => {
     }, pipelineRootNode);
     expect(step.getErrors()).toEqual(['Yaml: step contains invalid pull-policy \'WhenIFeelLikeIt\' (allowed: Default, Always, IfNotPresent, Never): test']);
   });
+
+  test('Step:(): sets workspace to default', () => {
+    const step = new Step({
+      'name': 'test',
+    }, pipelineRootNode);
+    expect(step.definition['workspace-mount-point']).toEqual('/cix/src');
+  });
+
+  test('Step:(): sets workspace to supplied', () => {
+    const step = new Step({
+      'name': 'test',
+      'workspace-mount-point': '/tmp/project',
+    }, pipelineRootNode);
+    expect(step.definition['workspace-mount-point']).toEqual('/tmp/project');
+  });
 });

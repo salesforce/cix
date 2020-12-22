@@ -5,11 +5,12 @@
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global jest, describe, test, expect, beforeEach  */
-// eslint-disable-next-line no-unused-vars
 import DockerContainer from './DockerContainer';
 import DockerExec from './DockerExec';
 // eslint-disable-next-line no-unused-vars
 import dockerode from 'dockerode';
+// eslint-disable-next-line no-unused-vars
+import stream from 'stream';
 
 jest.mock('./DockerContainer');
 jest.mock('dockerode');
@@ -170,6 +171,22 @@ describe('DockerExec runPreprocessor()', () => {
     expect(DockerContainer.mock.instances[0].start).toHaveBeenCalled();
     expect(dockerExec.getTrackedContainers()).toHaveLength(1);
   });
+
+  test('runPreprocessor returns status returned by DockerContainer.start', async () => {
+    dockerExec.networkName = 'test';
+    const container = new DockerContainer();
+    container.start = jest.fn().mockImplementation(() => 1);
+    DockerContainer.mockImplementation(() => container);
+
+    expect(dockerExec.getTrackedContainers()).toHaveLength(0);
+    const result = await dockerExec.runPreprocessor('image:test', 'test data');
+    expect(DockerContainer.mock.instances[0].create).toHaveBeenCalled();
+    expect(DockerContainer.mock.instances[0].start).toHaveBeenCalled();
+    expect(dockerExec.getTrackedContainers()).toHaveLength(1);
+    expect(result.status).toBe(1);
+  });
+
+  // TODO the stream stuff within both runPreprocessor() and runStep() needs to be tested properly
 });
 
 describe('DockerExec tearDown()', () => {

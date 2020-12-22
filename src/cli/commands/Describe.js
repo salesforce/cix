@@ -88,7 +88,6 @@ export default class Describe extends AbstractRemoteCommand {
     const sequence = await pipelineApi.getPipelineSequence({pipelineId: pipelineId});
     const sequenceString = JSON.stringify(sequence.obj, null, 2);
 
-
     if (options.stdout) {
       console.log(sequenceString);
     } else if (options.stderr) {

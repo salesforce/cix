@@ -11,4 +11,3 @@ pipeline:
         - echo $CIX_NETWORK_NAME
         - echo $CIX_CONTAINER_NAME
         - echo $CIX_EXECUTION_ID
- 

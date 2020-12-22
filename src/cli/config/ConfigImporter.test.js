@@ -19,14 +19,14 @@ describe('ConfigImporter.load', () => {
   });
 
   test('loads yaml into json object', () => {
-    const content = `--- 
-    environment: 
+    const content = `---
+    environment:
       FOO: foo
-      QUX: qux 
-    secrets: 
-      BAR: bar 
-    logging: 
-      mode: files 
+      QUX: qux
+    secrets:
+      BAR: bar
+    logging:
+      mode: files
       path: /tmp`;
     const expected = {
       environment: {FOO: 'foo', QUX: 'qux'},

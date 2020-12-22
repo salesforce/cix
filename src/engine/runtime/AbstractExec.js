@@ -25,13 +25,13 @@ export default class AbstractExec {
   }
 
   /**
-   * Runs a preprocessor. Init is not required. 
-   * 
+   * Runs a preprocessor. Init is not required.
+   *
    * @async
    *
    * @param {string} image - image name to use as preprocessor
    * @param {string} input - input to the preprocessor (format unknown, non-validated)
-   * 
+   *
    * @returns {string} output from the preprocessor, a valid cix yaml/json
    */
   runPreprocessor(image, input) {
@@ -40,7 +40,7 @@ export default class AbstractExec {
 
   /**
    * Create the container manager.
-   * 
+   *
    * @async
    *
    * @param {object} pipeline - pipeline objects
@@ -51,7 +51,7 @@ export default class AbstractExec {
 
   /**
    * Run a pipeline step (i.e., container).
-   * 
+   *
    * @async
    *
    * @param {object} stepDefinition - a step
@@ -62,7 +62,7 @@ export default class AbstractExec {
 
   /**
    * Tear down the container manager.
-   * 
+   *
    * @async
    */
   tearDown() {
