@@ -17,8 +17,24 @@ jobs:
       - uses: actions/setup-node@v1
         with: 
           node-version: 12.x 
-      - run: npm install
-      - run: npm run test
-      - run: npm run lint
-      - run: docker build . -t salesforce/cix:local
-      - run: npm run itest
+      - name: NPM Install
+        run: npm install
+      - name: Unit Tests
+        run: npm run test
+      - name: Lint Validation
+        run: npm run lint
+      - name: Docker Build for Integration Test
+        run: docker build . -t salesforce/cix:local
+      - name: Integration Tests
+        run: npm run itest
+      - name: Push to GitHub Packages
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          repository: salesforce/cix/cix
+          cache_froms: salesforce/cix:local
+          tag_with_ref: true
+          add_git_labels: true
+          
