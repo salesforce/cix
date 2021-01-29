@@ -23,8 +23,12 @@ jobs:
         run: npm run test
       - name: Lint Validation
         run: npm run lint
+      - name: Prune Packages
+        run: npm prune --production
       - name: Docker Build for Integration Test
         run: docker build . -t salesforce/cix:local
+      - name: Reinstall dev modules for itest
+        run: npm install
       - name: Integration Tests
         run: npm run itest
       - name: Push to GitHub Packages
