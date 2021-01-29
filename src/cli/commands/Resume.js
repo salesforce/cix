@@ -31,6 +31,7 @@ export default class Resume extends AbstractRemoteCommand {
     program.option('--pipeline-alias <pipeline-alias>', 'Pipeline Alias to resume. (default: "latest" alias)');
     program.option('--to <step>', 'Run to step name, then pause before the next step.');
     program.option('--next', 'Run one step, then pause.');
+    program.option('--non-blocking', 'Disables the blocking wait until a remote execution is complete.');
     program.option('--no-remote-logs', 'Disables streaming logs from Server.', false);
     return program = super.registerOptions(program);
   }
@@ -64,40 +65,52 @@ export default class Resume extends AbstractRemoteCommand {
     }
     const pipelineApi = await this.getPipelineApi(options);
 
-    let pipelineId;
+    const postBody = {};
+    if (options.nonBlocking) {
+      postBody['blocking'] = false;
+    } else {
+      postBody['blocking'] = true;
+    }
+
     if (options.pipelineId) {
-      pipelineId = options.pipelineId;
+      postBody['pipelineId'] = options.pipelineId;
     } else if (options.pipelineAlias) {
       const resp = await pipelineApi.getPipelineForAlias({pipelineAlias: options.pipelineAlias});
-      pipelineId = resp.body.id;
+      postBody['pipelineId'] = resp.body.id;
     } else {
       log.info('No pipeline ID or alias provided, using "latest" alias.');
       const resp = await pipelineApi.getPipelineForAlias({pipelineAlias: 'latest'});
-      pipelineId = resp.body.id;
+      postBody['pipelineId'] = resp.body.id;
     }
 
     if (options.next) {
       log.info('Resume: running pipeline to next step.');
       if (options.remoteLogs) {
-        await pipelineApi.nextPipelineStep({pipelineId: pipelineId}, this.logStreamingFetch());
+        await pipelineApi.nextPipelineStep(postBody, this.logStreamingFetch());
       } else {
-        await pipelineApi.nextPipelineStep({remoteLogs: false, pipelineId: pipelineId});
+        postBody['remoteLogs'] = false;
+        await pipelineApi.nextPipelineStep(postBody);
       }
     } else if (options.to) {
       log.info(`Resume: running pipeline to (and including) step named '${options.to}'.`);
+      postBody['step'] = options.to;
       if (options.remoteLogs) {
-        await pipelineApi.resumePipeline({step: options.to, pipelineId: pipelineId}, this.logStreamingFetch());
+        await pipelineApi.resumePipeline(postBody, this.logStreamingFetch());
       } else {
-        await pipelineApi.resumePipeline({step: options.to, remoteLogs: false, pipelineId: pipelineId});
+        postBody['remoteLogs'] = false;
+        await pipelineApi.resumePipeline(postBody);
       }
     } else {
       log.info('Resume: running pipeline to completion.');
       if (options.remoteLogs) {
-        await pipelineApi.resumePipeline({pipelineId: pipelineId}, this.logStreamingFetch());
+        await pipelineApi.resumePipeline(postBody, this.logStreamingFetch());
       } else {
-        await pipelineApi.resumePipeline({remoteLogs: false, pipelineId: pipelineId});
+        postBody['remoteLogs'] = false;
+        await pipelineApi.resumePipeline(postBody);
       }
     }
-    await this.checkStatusPostRun(pipelineId);
+    if (postBody['blocking']) {
+      await this.checkStatusPostRun(postBody['pipelineId']);
+    }
   }
 }

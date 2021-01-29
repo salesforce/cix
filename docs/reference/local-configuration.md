@@ -3,9 +3,13 @@
 CIX supports the use of local configuration files (similar to .npmrc), in order to save certain command line options to
 ease development and make CIX pipeline invocations more repeatable.
 
-Currently the config file supports setting Environment and Secret variables, and defining the Logging Mode and
-associated path if appropriate. Refer to the CLI reference sections on [Logging Modes](/reference/cli#logging-modes)
-and [`exec` command options](/reference/cli#cix-exec)).
+Currently the config file supports specifying default pipeline and plugin definition files (YAML), setting Environment
+and Secret variables, and defining the Logging Mode and associated path if appropriate. Refer to the CLI reference
+sections on [Logging Modes](/reference/cli#logging-modes) and [`exec` command options](/reference/cli#cix-exec)).
+
+Pipelines and plugins specified on the command line (with the `--yaml` and `--plugin` options) will override those set
+in the configuration file. Environment and Secret variables are cumulative, but values specified on the command-line
+override similarly named variables from the configuration file.
 
 ## Supported filenames and types
 CIX config files can be named the following: `.cixconfig`, `.cixconfig.json`, and `.cixconfig.yaml`. These files must
@@ -28,12 +32,22 @@ These files are loaded in the following order, with #1 having the lowest merge p
 `.cixconfig` files can be in either YAML or JSON format.
 ```yaml
 ---
+pipelines:
+  - cix.yaml
+  - build/test.yaml
+
+plugins:
+  - preprocessor-plugin.yaml
+
 environment:
   FOO: foo
   BAR: bar
 
 secrets: # Warning: storing secrets in plain text on disk is not advised. Try using --secret-prompt <key> or one of the --secret(s) options.
   BAZ: baz
+
+prompted-secrets:
+  - QUX
 
 logging:
   mode: files    # 'console' or 'files'
@@ -46,6 +60,13 @@ logging:
 `.cixconfig` files can be in either YAML or JSON format.
 ```json
 {
+   "pipelines": [
+      "cix.yaml",
+      "build/test.yaml"
+   ],
+   "plugins": [
+      "preprocessor-plugin.yaml"
+   ],
    "environment": {
       "FOO": "foo",
       "BAR": "qux"
@@ -53,6 +74,9 @@ logging:
    "secrets": {
       "BAZ": "baz"
    },
+   "prompted-secrets": [
+      "QUX"
+   ],
    "logging": {
       "mode": "files",
       "path": "cix-logs"

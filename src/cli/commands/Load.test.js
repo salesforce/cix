@@ -85,12 +85,12 @@ describe('Load.validateOptions', () => {
 
   test('throws an error if --secret-stdin isn\'t provided a valid key', () => {
     const options = {'yaml': ['docs/examples/basic.yaml'], 'secretStdin': ''};
-    expect(() => loadCommand.validateOptions(options)).toThrow('--secret-stdin and --secret-prompt require non-empty keys to be provided');
+    expect(() => loadCommand.validateOptions(options)).toThrow('--secret-stdin requires a non-empty key to be provided');
   });
 
   test('throws an error if --secret-prompt isn\'t provided a valid key', () => {
-    const options = {'yaml': ['docs/examples/basic.yaml'], 'secretPrompt': ''};
-    expect(() => loadCommand.validateOptions(options)).toThrow('--secret-stdin and --secret-prompt require non-empty keys to be provided');
+    const options = {'yaml': ['docs/examples/basic.yaml'], 'secretPrompt': ['']};
+    expect(() => loadCommand.validateOptions(options)).toThrow('--secret-prompt requires a non-empty key to be provided');
   });
 });
 

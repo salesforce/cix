@@ -194,8 +194,8 @@ export class StepCondition {
 
     if (!evaluator.isValid(expandedCondition)) {
       log.debug(`Following condition is not met for ${this.step.name}:`);
-      log.debug(`Condition:\n${YAML.safeDump(condition)}`);
-      log.debug(`Expanded Condition:\n${YAML.safeDump(expandedCondition)}`);
+      log.debug(`Condition:\n${YAML.dump(condition)}`);
+      log.debug(`Expanded Condition:\n${YAML.dump(expandedCondition)}`);
       return false;
     }
 

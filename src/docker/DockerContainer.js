@@ -503,12 +503,12 @@ export default class DockerContainer {
       this.errorStream._write = (_chunk, _encoding, next) => setImmediate(next);
     }
 
-    const container = await this.container.start();
+    await this.container.start();
 
     const attachStdin = Boolean(this.inputString);
 
     // In the case of a background container, this async function will continue to stream the container's output even after start() returns.
-    container.attach({
+    this.container.attach({
       stdin: attachStdin,
       hijack: attachStdin,
       stdout: true,
@@ -537,7 +537,7 @@ export default class DockerContainer {
 
     try {
       log.debug(`Waiting for container ${this.getQualifiedName()} (${this.getId()})`);
-      waitResult = await container.wait();
+      waitResult = await this.container.wait();
     } catch (e) {
       log.debug(`Exception while waiting for container ${this.getQualifiedName()}: \n\t${e}`);
     }

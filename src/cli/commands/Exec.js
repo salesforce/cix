@@ -27,6 +27,7 @@ export default class Exec extends Load {
   registerOptions(program) {
     program = super.registerOptions(program);
     program.option('--remote', 'CIX will execute against a remote CIX Server.');
+    program.option('--non-blocking', 'Disables the blocking wait until a remote execution is complete.');
     return program.option('--no-remote-logs', 'Disables streaming logs from Server.', false);
   }
 
@@ -61,12 +62,23 @@ export default class Exec extends Load {
 
     if (options.remote) {
       const pipelineApi = await this.getPipelineApi(options);
-      if (options.remoteLogs) {
-        await pipelineApi.startPipeline({pipelineId: pipelineId}, this.logStreamingFetch());
+      const postBody = {
+        pipelineId: pipelineId,
+      };
+      if (options.nonBlocking) {
+        postBody['blocking'] = false;
       } else {
-        await pipelineApi.startPipeline({pipelineId: pipelineId, remoteLogs: false});
+        postBody['blocking'] = true;
       }
-      await this.checkStatusPostRun(pipelineId);
+      if (options.remoteLogs) {
+        await pipelineApi.startPipeline(postBody, this.logStreamingFetch());
+      } else {
+        postBody['remoteLogs'] = false;
+        await pipelineApi.startPipeline(postBody);
+      }
+      if (postBody['blocking']) {
+        await this.checkStatusPostRun(pipelineId);
+      }
     } else {
       await this.getPipelineService().startPipeline(pipelineId);
     }

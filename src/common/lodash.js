@@ -113,7 +113,7 @@ _.map({
   loadYamlOrJson(input, optionalEncoding) {
     const encoding = optionalEncoding || 'utf-8';
     try {
-      return yaml.safeLoad(input, encoding);
+      return yaml.load(input, encoding);
     } catch (error) {
       log.warn(`${error}`);
       throw new ValidateError('Failed to parse YAML/JSON.');

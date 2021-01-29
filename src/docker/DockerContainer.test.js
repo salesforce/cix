@@ -348,65 +348,58 @@ describe('create()', () => {
 });
 
 describe('Basic container operations (start, stop, remove)', () => {
-  let dockerApi; let dockerContainer; let dockerodeContainer; let environment;
+  let dockerApi; let dockerContainer; let environment; let mockContainer;
 
   beforeEach(() => {
     jest.resetAllMocks();
     dockerApi = new dockerode();
-    dockerApi.Container = {
-      stop: jest.fn(),
-      remove: jest.fn(),
-    };
     environment = new Environment();
-    dockerodeContainer = {
+    mockContainer = {
+      id: 'abcd0123456ef789',
       attach: jest.fn(),
+      remove: jest.fn(),
+      start: jest.fn(),
+      stop: jest.fn(),
       wait: jest.fn().mockResolvedValue({StatusCode: 0}),
     };
     dockerContainer = new DockerContainer(dockerApi, 'testprefix', environment, 'testnetwork');
-    dockerContainer.container = {
-      id: 'abcd0123456ef789',
-      start: jest.fn().mockImplementation(() => dockerodeContainer),
-    };
+    dockerContainer.container = mockContainer;
   });
 
-  test('start() calls Dockerode start and wait', async () => {
+  test('start() calls Dockerode start, attach, and wait, and returns the status', async () => {
     await expect(dockerContainer.start()).resolves.toEqual(0);
-    expect(dockerContainer.container.start).toHaveBeenCalled();
-    expect(dockerodeContainer.wait).toHaveBeenCalled();
+    expect(mockContainer.start).toHaveBeenCalled();
+    expect(mockContainer.attach).toHaveBeenCalled();
+    expect(mockContainer.wait).toHaveBeenCalled();
   });
 
-  test('start() with background calls Dockerode start but does not wait or return a value', async () => {
+  test('start() with background calls Dockerode start and attach, but does not wait nor return a value', async () => {
     dockerContainer.config.background = true;
     await expect(dockerContainer.start()).resolves.toBeUndefined();
-    expect(dockerContainer.container.start).toHaveBeenCalled();
-    expect(dockerodeContainer.wait).not.toHaveBeenCalled();
+    expect(mockContainer.start).toHaveBeenCalled();
+    expect(mockContainer.attach).toHaveBeenCalled();
+    expect(mockContainer.wait).not.toHaveBeenCalled();
   });
 
-  test('start() throws if the container fails', async () => {
-    dockerodeContainer.wait = jest.fn().mockResolvedValue({StatusCode: 1});
+  test('start() throws when the container fails', async () => {
+    mockContainer.wait = jest.fn().mockResolvedValue({StatusCode: 1});
     await expect(dockerContainer.start()).rejects.toThrow('failed with non-zero exit status');
   });
 
-  test('start() does not throw with continue-on-fail', async () => {
-    dockerodeContainer.wait = jest.fn().mockResolvedValue({StatusCode: 1});
+  test('start() with continue-on-fail does not throw when the container fails', async () => {
+    mockContainer.wait = jest.fn().mockResolvedValue({StatusCode: 1});
     dockerContainer.config.continueOnFail = true;
     await expect(dockerContainer.start()).resolves.toEqual(1);
   });
 
   test('stop() calls Dockerode stop', async () => {
-    dockerContainer.container = {
-      stop: jest.fn(),
-    };
     await expect(dockerContainer.stop()).resolves.toEqual(dockerContainer);
-    expect(dockerContainer.container.stop).toHaveBeenCalled();
+    expect(mockContainer.stop).toHaveBeenCalled();
   });
 
   test('remove() calls Dockerode remove', async () => {
-    dockerContainer.container = {
-      remove: jest.fn(),
-    };
     await expect(dockerContainer.remove()).resolves.toEqual(dockerContainer);
-    expect(dockerContainer.container.remove).toHaveBeenCalled();
+    expect(mockContainer.remove).toHaveBeenCalled();
   });
 });
 

@@ -104,16 +104,33 @@ describe('ConfigImporter.updateOptions', () => {
   });
 
   test('options and loadedConfigs should merge', () => {
-    const options = {env: {QUX: 'qux'}, secret: {BAZ: 'baz'}};
+    const options = {env: {QUX: 'qux'}, secret: {BAZ: 'baz'}, secretPrompt: ['same-secret', 'secret2']};
     importer.loadedConfigs = {
-      environment: {FOO: 'foo'},
-      secrets: {BAR: 'bar'},
-      logging: {mode: 'files', path: '/tmp'},
+      'environment': {FOO: 'foo'},
+      'secrets': {BAR: 'bar'},
+      'logging': {mode: 'files', path: '/tmp'},
+      'prompted-secrets': ['configsecret', 'same-secret'],
     };
     const expectedOptions = {
       env: {FOO: 'foo', QUX: 'qux'},
       secret: {BAR: 'bar', BAZ: 'baz'},
       logging: 'files', loggingPath: '/tmp',
+      secretPrompt: ['configsecret', 'same-secret', 'secret2'],
+    };
+
+    importer.updateOptions(options);
+    expect(options).toStrictEqual(expectedOptions);
+  });
+
+  test('pipeline and plugin options on the command line override loadedConfigs', () => {
+    const options = {yaml: ['pipelineA', 'pipelineB'], plugin: ['pluginA', 'pluginB']};
+    importer.loadedConfigs = {
+      pipelines: ['pipelineC', 'pipelineD'],
+      plugins: ['pluginC', 'pluginD'],
+    };
+    const expectedOptions = {
+      yaml: ['pipelineA', 'pipelineB'],
+      plugin: ['pluginA', 'pluginB'],
     };
 
     importer.updateOptions(options);

@@ -49,7 +49,7 @@ describe('lodash.getUniqueDuplicates', () => {
 describe('lodash.loadYamlOrJson', () => {
   test('should return json representation of yaml string provided', () => {
     const data = {data: 'test'};
-    const yamlData = yaml.safeDump(data);
+    const yamlData = yaml.dump(data);
 
     expect(_.loadYamlOrJson(yamlData)).toEqual(data);
   });
@@ -62,7 +62,7 @@ describe('lodash.loadYamlOrJson', () => {
 
   test('should throw CIXError if it cannot parse yaml or json', () => {
     jest.mock('js-yaml');
-    yaml.safeLoad = jest.fn(() => {
+    yaml.load = jest.fn(() => {
       throw new Error();
     });
 
