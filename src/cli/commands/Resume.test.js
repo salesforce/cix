@@ -68,7 +68,7 @@ describe('Resume.action', () => {
       return {resumePipeline: resumePipeline, getPipelineStatus: getPipelineStatus, getPipelineForAlias: getPipelineForAlias};
     });
     await resume.action({to: 'test'});
-    expect(resumePipeline.mock.calls[0][0]).toEqual({pipelineId: 'id', step: 'test', remoteLogs: false});
+    expect(resumePipeline.mock.calls[0][0]).toEqual({pipelineId: 'id', step: 'test', remoteLogs: false, blocking: true});
   });
 
   test('no options calls resumePipeline without argument.', async () => {
@@ -77,7 +77,7 @@ describe('Resume.action', () => {
       return {resumePipeline: resumePipeline, getPipelineStatus: getPipelineStatus, getPipelineForAlias: getPipelineForAlias};
     });
     await resume.action({});
-    expect(resumePipeline.mock.calls[0][0]).toEqual({pipelineId: 'id', remoteLogs: false});
+    expect(resumePipeline.mock.calls[0][0]).toEqual({pipelineId: 'id', remoteLogs: false, blocking: true});
   });
 
   test('cannot call both --to and --next', async () => {
@@ -87,5 +87,14 @@ describe('Resume.action', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(CLIError);
     }
+  });
+
+  test('--non-blocking option disables blocking', async () => {
+    const resumePipeline = jest.fn().mockImplementation(() => {});
+    jest.spyOn(resume, 'getPipelineApi').mockImplementation(() => {
+      return {resumePipeline: resumePipeline, getPipelineStatus: getPipelineStatus, getPipelineForAlias: getPipelineForAlias};
+    });
+    await resume.action({'nonBlocking': true});
+    expect(resumePipeline.mock.calls[0][0]).toEqual({pipelineId: 'id', remoteLogs: false, blocking: false});
   });
 });

@@ -1,17 +1,17 @@
 # CIX Server API
 This is the CIX Server API. Contact us on Slack, [#cix-users](https://computecloud.slack.com/archives/CEMNRF99Q).
 
-## Version: 2.2.2
+## Version: 2.4.0
 
-**Contact information:**
-ciplatform@salesforce.com
+**Contact information:**  
+ciplatform@salesforce.com  
 
 [Find out more about CIX](https://opensource.salesforce.com/cix/)
 
 ### /pipeline/{pipelineId}/environment
 
 #### GET
-##### Description:
+##### Description
 
 Returns list of environment variables for a Pipeline.
 
@@ -28,7 +28,7 @@ Returns list of environment variables for a Pipeline.
 | 200 | successful operation | [ string ] |
 
 #### POST
-##### Description:
+##### Description
 
 Adds a new environment variable.
 
@@ -48,7 +48,7 @@ Adds a new environment variable.
 ### /pipeline/{pipelineId}/environment/{environmentVar}
 
 #### GET
-##### Description:
+##### Description
 
 Gets a environment variable.
 
@@ -69,7 +69,7 @@ Gets a environment variable.
 ### /pipeline
 
 #### POST
-##### Description:
+##### Description
 
 Creates a new Pipeline.
 
@@ -77,7 +77,7 @@ Creates a new Pipeline.
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
-| body | body | Pipeline Object to add | Yes | [NewPipeline](#newpipeline) |
+| pipelineSpec | body | Pipeline Object to add | Yes | [NewPipeline](#newpipeline) |
 
 ##### Responses
 
@@ -88,7 +88,7 @@ Creates a new Pipeline.
 | 418 | Invalid Pipeline Schema | object |
 
 #### GET
-##### Description:
+##### Description
 
 Returns a list of pipelines.
 
@@ -98,12 +98,18 @@ Returns a list of pipelines.
 | ---- | ----------- | ------ |
 | 200 | successful operation | [ string ] |
 
-### /pipeline/default
+### /pipeline/alias/{pipelineAlias}
 
 #### GET
-##### Description:
+##### Description
 
-Gets the default Pipeline being used.
+Gets the ID for a pipeline alias.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| pipelineAlias | path | Alias name | Yes | string |
 
 ##### Responses
 
@@ -111,30 +117,23 @@ Gets the default Pipeline being used.
 | ---- | ----------- | ------ |
 | 200 | successful operation | object |
 
-### /pipeline/default/{pipelineId}
+### /pipeline/alias/
 
-#### POST
-##### Description:
+#### GET
+##### Description
 
-Sets the default Pipeline to be used.
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| pipelineId | path | Pipeline ID | Yes | string |
+Gets the ID for a pipeline alias.
 
 ##### Responses
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
-| 200 | successful operation |  |
-| 404 | Pipeline does not exist. | string |
+| 200 | successful operation | [ string ] |
 
 ### /pipeline/{pipelineId}
 
 #### GET
-##### Description:
+##### Description
 
 Returns the sequence of Pipeline steps.
 
@@ -152,32 +151,12 @@ Returns the sequence of Pipeline steps.
 | 400 | Invalid request. | string |
 | 404 | Pipeline does not exist. | string |
 
-### /pipeline/{pipelineId}/status
+### /pipeline/{pipelineId}/alias
 
 #### GET
-##### Description:
+##### Description
 
-Returns the status for a pipeline.
-
-##### Parameters
-
-| Name | Located in | Description | Required | Schema |
-| ---- | ---------- | ----------- | -------- | ---- |
-| pipelineId | path | Pipeline ID | No | string |
-
-##### Responses
-
-| Code | Description | Schema |
-| ---- | ----------- | ------ |
-| 200 | successful operation | object |
-| 404 | Pipeline does not exist. | string |
-
-### /pipeline/{pipelineId}/start
-
-#### GET
-##### Description:
-
-Starts a pipeline.
+Gets the alias for a given pipeline.
 
 ##### Parameters
 
@@ -189,13 +168,74 @@ Starts a pipeline.
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
+| 200 | successful operation | [ string ] |
+
+### /pipeline/{pipelineId}/alias/{pipelineAlias}
+
+#### POST
+##### Description
+
+Sets the alias for a given pipeline.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| pipelineId | path | Pipeline ID | Yes | string |
+| pipelineAlias | path | Alias name | Yes | string |
+
+##### Responses
+
+| Code | Description |
+| ---- | ----------- |
+| 200 | successful operation |
+
+### /pipeline/{pipelineId}/status
+
+#### GET
+##### Description
+
+Returns the status for a pipeline.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| pipelineId | path | Pipeline ID | Yes | string |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | successful operation | object |
+| 404 | Pipeline does not exist. | string |
+
+### /pipeline/{pipelineId}/start
+
+#### GET
+##### Description
+
+Starts a pipeline.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| pipelineId | path | Pipeline ID | Yes | string |
+| blocking | query | Blocks until pipeline is complete. | No | boolean |
+| remoteLogs | query | Remote Log Stream | No | boolean |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
 | 200 | successful operation |  |
 | 404 | Pipeline does not exist. | string |
 
 ### /pipeline/{pipelineId}/pause
 
 #### GET
-##### Description:
+##### Description
 
 Pauses a pipeline.
 
@@ -209,13 +249,13 @@ Pauses a pipeline.
 
 | Code | Description | Schema |
 | ---- | ----------- | ------ |
-| 200 | successful operation |  |
+| 200 | successful operation | string |
 | 404 | Pipeline does not exist. | string |
 
 ### /pipeline/{pipelineId}/resume
 
 #### GET
-##### Description:
+##### Description
 
 Resumes a pipeline.
 
@@ -223,8 +263,10 @@ Resumes a pipeline.
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
-| pipelineId | path | Pipeline ID | No | string |
+| pipelineId | path | Pipeline ID | Yes | string |
 | step | query | Step Name | No | string |
+| blocking | query | Blocks while pipeline is active. | No | boolean |
+| remoteLogs | query | Remote Log Stream | No | boolean |
 
 ##### Responses
 
@@ -236,7 +278,7 @@ Resumes a pipeline.
 ### /pipeline/{pipelineId}/kill
 
 #### GET
-##### Description:
+##### Description
 
 Kills a pipeline.
 
@@ -244,7 +286,7 @@ Kills a pipeline.
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
-| pipelineId | path | Pipeline ID | No | string |
+| pipelineId | path | Pipeline ID | Yes | string |
 
 ##### Responses
 
@@ -256,7 +298,7 @@ Kills a pipeline.
 ### /pipeline/{pipelineId}/next-step
 
 #### GET
-##### Description:
+##### Description
 
 Runs the next step on a pipeline.
 
@@ -264,7 +306,9 @@ Runs the next step on a pipeline.
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
-| pipelineId | path | Pipeline ID | No | string |
+| pipelineId | path | Pipeline ID | Yes | string |
+| blocking | query | Blocks while pipeline is active. | No | boolean |
+| remoteLogs | query | Remote Log Stream | No | boolean |
 
 ##### Responses
 
@@ -277,7 +321,7 @@ Runs the next step on a pipeline.
 ### /pipeline/{pipelineId}/link/{nextPipelineId}
 
 #### GET
-##### Description:
+##### Description
 
 Chains one pipeline to another.
 
@@ -295,10 +339,41 @@ Chains one pipeline to another.
 | 200 | successful operation |  |
 | 404 | Pipeline does not exist. | string |
 
-### /validate
+### /plugin
 
 #### POST
-##### Description:
+##### Description
+
+Adds a plugin.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| pluginSpec | body | Plugin definition. | Yes |  |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | successful operation | object |
+| 400 | Invalid Plugin Schema |  |
+
+#### GET
+##### Description
+
+Returns a list of plugins.
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | successful operation | [ string ] |
+
+### /validate/pipeline/full
+
+#### POST
+##### Description
 
 Validates a Pipeline YAML.
 
@@ -306,7 +381,47 @@ Validates a Pipeline YAML.
 
 | Name | Located in | Description | Required | Schema |
 | ---- | ---------- | ----------- | -------- | ---- |
-| body | body | Pipeline Object to validate | Yes | [NewPipeline](#newpipeline) |
+| pipelineSpec | body | Pipeline Object to validate | Yes | [NewPipeline](#newpipeline) |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | successful operation |  |
+| 400 | Invalid Pipeline Schema | object |
+
+### /validate/pipeline/schema
+
+#### POST
+##### Description
+
+Validates a JSON Pipeline Schema without loading.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| pipelineSpec | body | Pipeline Schema | Yes |  |
+
+##### Responses
+
+| Code | Description | Schema |
+| ---- | ----------- | ------ |
+| 200 | successful operation |  |
+| 400 | Invalid Pipeline Schema | object |
+
+### /validate/plugin/schema
+
+#### POST
+##### Description
+
+Validates a Plugin Schema without loading.
+
+##### Parameters
+
+| Name | Located in | Description | Required | Schema |
+| ---- | ---------- | ----------- | -------- | ---- |
+| pluginSpec | body | Pipeline Schema | Yes |  |
 
 ##### Responses
 
@@ -316,7 +431,6 @@ Validates a Pipeline YAML.
 | 400 | Invalid Pipeline Schema | object |
 
 ### Models
-
 
 #### EnvironmentVariable
 
@@ -337,7 +451,9 @@ Validates a Pipeline YAML.
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | environment | [ [EnvironmentVariable](#environmentvariable) ] | List of environment variables. | No |
+| pipelineAlias | string | Alias for pipeline. | No |
 | yamlPath | string | Path to YAML to load. | No |
+| rawPipeline | Object | JSON pipeline to load. | No |
 | type | string | Type of pipeline. | No |
 
 #### Pipeline

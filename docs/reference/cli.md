@@ -60,12 +60,14 @@ Options:
   --plugin <path>            Path to plugin YAML file. May be repeated.
   --setup <path>             Path to setup pipeline YAML file.
   --teardown <path>          Path to teardown pipeline YAML file.
-  --secret-prompt <key>      CIX will prompt you for the value of the key specified.
+  --secret-prompt <key>      CIX will prompt you for the value of the key specified. May be repeated.
   --secret-stdin <key>       CIX will assign a value passed via stdin to the key specified. Cannot be used with --secrets-stdin.
   --secrets-stdin            CIX will accept a map of key/value pairs in JSON format via stdin. Cannot be used with --secret-stdin.
   --host <host>              CIX Server to connect to (default: "127.0.0.1")
   --port <port>              CIX Server to connect to (default: "10030")
   --remote                   CIX will execute against a remote CIX Server.
+  --non-blocking             Disables the blocking wait until a remote execution is complete.
+  --no-remote-logs           Disables streaming logs from Server.
   -h, --help                 display help for command
 ```
 
@@ -134,7 +136,7 @@ Options:
   --plugin <path>            Path to plugin YAML file. May be repeated.
   --setup <path>             Path to setup pipeline YAML file.
   --teardown <path>          Path to teardown pipeline YAML file.
-  --secret-prompt <key>      CIX will prompt you for the value of the key specified.
+  --secret-prompt <key>      CIX will prompt you for the value of the key specified. May be repeated.
   --secret-stdin <key>       CIX will assign a value passed via stdin to the key specified. Cannot be used with --secrets-stdin.
   --secrets-stdin            CIX will accept a map of key/value pairs in JSON format via stdin. Cannot be used with --secret-stdin.
   --host <host>              CIX Server to connect to (default: "127.0.0.1")
@@ -174,11 +176,15 @@ Usage: cix resume [options]
 Continues a paused Pipeline on a CIX Server.
 
 Options:
-  --to <step>    Run to step name, then pause before the next step.
-  --next         Run one step, then pause.
-  --host <host>  CIX Server to connect to (default: "127.0.0.1")
-  --port <port>  CIX Server to connect to (default: "10030")
-  -h, --help     display help for command
+  --pipeline-id <pipeline-id>        Pipeline ID to resume (default: "latest" alias)
+  --pipeline-alias <pipeline-alias>  Pipeline Alias to resume. (default: "latest" alias)
+  --to <step>                        Run to step name, then pause before the next step.
+  --next                             Run one step, then pause.
+  --non-blocking                     Disables the blocking wait until a remote execution is complete.
+  --no-remote-logs                   Disables streaming logs from Server.
+  --host <host>                      CIX Server to connect to (default: "127.0.0.1")
+  --port <port>                      CIX Server to connect to (default: "10030")
+  -h, --help                         display help for command
 ```
 
 

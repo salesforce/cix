@@ -4,13 +4,19 @@
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {ExecutionError, _} from '../../common/index.js';
+import {ExecutionError, ValidateError, _} from '../../common/index.js';
 import log from 'winston';
 import paths from 'deepdash/paths.js';
 
 export default class PipelineImporter {
   constructor({path, rawPipeline, environment}) {
     this.path = _.emptyToNull(path);
+    if (this.path != null) {
+      this.path = environment.replace$$Values(this.path);
+      if (this.path.includes('$$')) {
+        throw new ValidateError(`Import path '${this.path}' is missing an environment variable for substitution.`);
+      }
+    }
     this.rawPipeline = rawPipeline;
     this.environment = environment;
     this.definition = {};

@@ -18,10 +18,21 @@ class Validate {
    * @returns {Array} validation errors
    */
   validatePipelineSchema(json) {
-    const ajv = new Ajv({
-      schemas: [masterSchema, environmentSchema, importSchema, pipelineSchema, registrySchema, stepSchema, stepsSchema, whenSchema],
-      allErrors: true,
-    });
+    let ajv;
+    // TODO: Fix this Ajs 7.0.3 behavior when Jest supports ESModules natively without Babel
+    if (Ajv.default) {
+      ajv = new Ajv.default({
+        schemas: [masterSchema, environmentSchema, importSchema, pipelineSchema, registrySchema, stepSchema, stepsSchema, whenSchema],
+        allErrors: true,
+        allowUnionTypes: true,
+      });
+    } else {
+      ajv = new Ajv({
+        schemas: [masterSchema, environmentSchema, importSchema, pipelineSchema, registrySchema, stepSchema, stepsSchema, whenSchema],
+        allErrors: true,
+        allowUnionTypes: true,
+      });
+    }
     const validate = ajv.getSchema('master.json');
 
     validate(json);
@@ -36,10 +47,22 @@ class Validate {
    * @returns {Array} validation errors
    */
   validatePluginSchema(json) {
-    const ajv = new Ajv({
-      schemas: [pluginSchema, preprocessorSchema],
-      allErrors: true,
-    });
+    let ajv;
+    // TODO: Fix this Ajs 7.0.3 behavior when Jest supports ESModules natively without Babel
+    if (Ajv.default) {
+      ajv = new Ajv.default({
+        schemas: [pluginSchema, preprocessorSchema],
+        allErrors: true,
+        allowUnionTypes: true,
+      });
+    } else {
+      ajv = new Ajv({
+        schemas: [pluginSchema, preprocessorSchema],
+        allErrors: true,
+        allowUnionTypes: true,
+      });
+    }
+
     const validate = ajv.getSchema('plugin.json');
 
     validate(json);

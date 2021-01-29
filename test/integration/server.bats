@@ -115,6 +115,34 @@ EOF
   rmdir tmp || true
 }
 
+
+@test "Can disable blocking behaviour" {
+  mkdir -p tmp
+  cat << EOF > tmp/non-blocking.yaml
+version: 2.1
+pipeline:
+  - step:
+      name: first
+      image: alpine:3.9
+      commands:
+        - sleep 2
+        - echo "Magic String 1"
+EOF
+  run $CIX_SCRIPT_WITH_TTY load -y tmp/non-blocking.yaml
+  run $CIX_SCRIPT_WITH_TTY resume --non-blocking
+  refute_output --partial 'Magic String 1'
+  assert_success
+  run $CIX_SCRIPT_WITH_TTY pipelines --status
+  assert_success
+  assert_output --partial 'Pipeline Status: "running"'
+  sleep 2
+  run $CIX_SCRIPT_WITH_TTY pipelines --status
+  assert_success
+  assert_output --partial 'Pipeline Status: "successful"'
+  rm tmp/non-blocking.yaml
+  rmdir tmp || true
+}
+
 @test "CIX --next pipeline failure returns non-zero exit" {
   mkdir -p tmp
   cat << EOF > tmp/error.yaml

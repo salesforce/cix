@@ -121,6 +121,7 @@ if [[ $DOCKER_HOST ]]; then
 fi
 
 if [[ $CIX_DOCKER_NETWORK ]]; then
+    unset EXPOSE_PORT
     SET_DOCKER_NETWORK="--network $CIX_DOCKER_NETWORK"
 fi
 

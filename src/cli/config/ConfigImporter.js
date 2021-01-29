@@ -52,12 +52,24 @@ export default class ConfigImporter {
    */
   updateOptions(options) {
     // options already set in 'options' will have the highest priority
+    if (!options.yaml && this.loadedConfigs.pipelines) {
+      options.yaml = this.loadedConfigs.pipelines;
+    }
+
+    if (!options.plugin && this.loadedConfigs.plugins) {
+      options.plugin = this.loadedConfigs.plugins;
+    }
+
     if (this.loadedConfigs.environment) {
       options.env = _.merge({}, this.loadedConfigs.environment, options.env);
     }
 
     if (this.loadedConfigs.secrets) {
       options.secret = _.merge({}, this.loadedConfigs.secrets, options.secret);
+    }
+
+    if (this.loadedConfigs['prompted-secrets']) {
+      options.secretPrompt = _.union(this.loadedConfigs['prompted-secrets'], options.secretPrompt);
     }
 
     if (this.loadedConfigs.logging && this.loadedConfigs.logging.mode) {
@@ -93,7 +105,7 @@ export function loadConfigFile(path) {
   }
 
   try {
-    return yaml.safeLoad(file, encoding);
+    return yaml.load(file, encoding);
   } catch (error) { // file is not yaml, try loading it as json
     try {
       return JSON.parse(file);

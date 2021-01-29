@@ -45,7 +45,7 @@ export default class Load extends AbstractRemoteCommand {
     program.option('--plugin <path>', 'Path to plugin YAML file. May be repeated.', this.collectValues.bind(this));
     program.option('--setup <path>', 'Path to setup pipeline YAML file.');
     program.option('--teardown <path>', 'Path to teardown pipeline YAML file.');
-    program.option('--secret-prompt <key>', 'CIX will prompt you for the value of the key specified.');
+    program.option('--secret-prompt <key>', 'CIX will prompt you for the value of the key specified. May be repeated.', this.collectValues.bind(this));
     program.option('--secret-stdin <key>', 'CIX will assign a value passed via stdin to the key specified. Cannot be used with --secrets-stdin.');
     program.option('--secrets-stdin', 'CIX will accept a map of key/value pairs in JSON format via stdin. Cannot be used with --secret-stdin.');
     return super.registerOptions(program);
@@ -82,8 +82,16 @@ export default class Load extends AbstractRemoteCommand {
       throw new CLIError('--secret-prompt may not be used with the --secret-stdin nor --secrets-stdin options');
     }
 
-    if (options.secretStdin === '' || options.secretPrompt === '') {
-      throw new CLIError('--secret-stdin and --secret-prompt require non-empty keys to be provided');
+    if (options.secretStdin === '') {
+      throw new CLIError('--secret-stdin requires a non-empty key to be provided');
+    }
+
+    if (options.secretPrompt) {
+      for (const promptKey of options.secretPrompt) {
+        if (promptKey === '') {
+          throw new CLIError('--secret-prompt requires a non-empty key to be provided');
+        }
+      }
     }
   }
 
@@ -312,25 +320,26 @@ export default class Load extends AbstractRemoteCommand {
     }
 
     if (options.secretPrompt) {
-      const key = options.secretPrompt;
-      let value;
+      for (const key of options.secretPrompt) {
+        let value;
 
-      if (NodeProvider.getProcess().stdin.isTTY) {
-        // Backspace doesn't appear to work by design (https://github.com/anseki/readline-sync/issues/17).
-        value = readlineSync.question(`Please enter the value for secret '${key}': `, {
-          hideEchoBack: true,
-          keepWhitespace: true,
-        });
-      } else {
-        if (options.secretStdin || options.secretsStdin) {
-          throw new CLIError('--secret-prompt cannot be combined with --secret-stdin nor --secrets-stdin unless the input is a TTY');
+        if (NodeProvider.getProcess().stdin.isTTY) {
+          // Backspace doesn't appear to work by design (https://github.com/anseki/readline-sync/issues/17).
+          value = readlineSync.question(`Please enter the value for secret '${key}': `, {
+            hideEchoBack: true,
+            keepWhitespace: true,
+          });
+        } else {
+          if (options.secretStdin || options.secretsStdin) {
+            throw new CLIError('--secret-prompt cannot be combined with --secret-stdin nor --secrets-stdin unless the input is a TTY');
+          }
+
+          // Trim final newline from stdin.
+          value = this.input.replace(/\n$/, '');
         }
 
-        // Trim final newline from stdin.
-        value = this.input.replace(/\n$/, '');
+        options.secret = _.extend(options.secret, {[key]: value});
       }
-
-      options.secret = _.extend(options.secret, {[key]: value});
     }
   }
 }

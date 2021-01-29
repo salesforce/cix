@@ -38,7 +38,27 @@ describe('Exec.action', () => {
       return {addPipeline: addPipeline, getPipelineStatus: getPipelineStatus, startPipeline: startPipeline};
     });
     await exec.action({remote: true});
-    expect(startPipeline.mock.calls[0][0]).toEqual({pipelineId: 'PIPELINE_ID', remoteLogs: false});
+    expect(startPipeline.mock.calls[0][0]).toEqual({pipelineId: 'PIPELINE_ID', remoteLogs: false, blocking: true});
+  });
+
+  test('--non-blocking option disables blocking', async () => {
+    jest.spyOn(exec, 'generateListOfPipelines').mockImplementation(() => [{yaml: 'test.yaml'}]);
+    const addPipeline = jest.fn().mockImplementation(() => {
+      return {body: {id: 'PIPELINE_ID'}};
+    });
+    const startPipeline = jest.fn().mockImplementation(() => {});
+    const getPipelineStatus = jest.fn().mockImplementation(() => {
+      return {
+        obj: {
+          status: 'successful',
+        },
+      };
+    });
+    jest.spyOn(exec, 'getPipelineApi').mockImplementation(() => {
+      return {addPipeline: addPipeline, getPipelineStatus: getPipelineStatus, startPipeline: startPipeline};
+    });
+    await exec.action({remote: true, nonBlocking: true});
+    expect(startPipeline.mock.calls[0][0]).toEqual({pipelineId: 'PIPELINE_ID', remoteLogs: false, blocking: false});
   });
 
   test('when executing a local pipeline, we add it, then start it.', async () => {

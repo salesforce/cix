@@ -200,8 +200,8 @@ export default class AbstractCommand {
    * @returns {object} updated values
    */
   collectKeyValueAndWarn(value, accumulator = {}) {
-    if (!this.insecureSecretWarned) { // only warn once per invocation
-      log.warn('Passing secrets with -s is not secure, please use --secret-stdin or --secrets-stdin');
+    if (value.includes('=') && !this.insecureSecretWarned) { // only warn once per invocation
+      log.warn('Passing secrets with -s is not secure, instead use --secret-stdin, --secrets-stdin, or --secret-prompt');
     }
 
     this.insecureSecretWarned = true;

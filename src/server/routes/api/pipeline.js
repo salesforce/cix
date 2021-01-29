@@ -9,6 +9,7 @@ import {PipelineService} from '../../../engine/index.js';
 import asyncLogHandler from './asyncLogHandler.js';
 import environment from './environment.js';
 import express from 'express';
+import log from 'winston';
 
 const pipeline = express.Router();
 pipeline.use(environment);
@@ -356,6 +357,12 @@ pipeline.get('/:pipelineId/status', asyncLogHandler(async (req, res) => {
  *         description: "Pipeline ID"
  *         required: true
  *         type: string
+ *       - name: "blocking"
+ *         in: "query"
+ *         description: "Blocks until pipeline is complete."
+ *         required: false
+ *         type: boolean
+ *         default: true
  *       - name: "remoteLogs"
  *         in: "query"
  *         description: "Remote Log Stream"
@@ -371,7 +378,13 @@ pipeline.get('/:pipelineId/status', asyncLogHandler(async (req, res) => {
  *           type: string
  */
 pipeline.get('/:pipelineId/start', asyncLogHandler(async (req, res) => {
-  await PipelineService.startPipeline(req.params['pipelineId']);
+  if (req.query.blocking === undefined || req.query.blocking === 'true') {
+    log.debug('Server blocking on pipeline execution.');
+    await PipelineService.startPipeline(req.params['pipelineId']);
+  } else {
+    log.debug('Server non-blocking on pipeline execution.');
+    PipelineService.startPipeline(req.params['pipelineId']);
+  }
   res.send();
 }));
 
@@ -429,6 +442,12 @@ pipeline.get('/:pipelineId/pause', asyncLogHandler(async (req, res) => {
  *         description: "Step Name"
  *         required: false
  *         type: string
+ *       - name: "blocking"
+ *         in: "query"
+ *         description: "Blocks while pipeline is active."
+ *         required: false
+ *         type: boolean
+ *         default: true
  *       - name: "remoteLogs"
  *         in: "query"
  *         description: "Remote Log Stream"
@@ -444,7 +463,13 @@ pipeline.get('/:pipelineId/pause', asyncLogHandler(async (req, res) => {
  *           type: string
  */
 pipeline.get('/:pipelineId/resume', asyncLogHandler(async (req, res) => {
-  await PipelineService.resumePipeline(req.params['pipelineId'], req.query['step']);
+  if (req.query.blocking === undefined || req.query.blocking === 'true') {
+    log.debug('Server blocking on pipeline execution.');
+    await PipelineService.resumePipeline(req.params['pipelineId'], req.query['step']);
+  } else {
+    log.debug('Server non-blocking on pipeline execution.');
+    PipelineService.resumePipeline(req.params['pipelineId'], req.query['step']);
+  }
   res.send();
 }));
 
@@ -495,6 +520,12 @@ pipeline.get('/:pipelineId/kill', asyncLogHandler(async (req, res) => {
  *         description: "Pipeline ID"
  *         required: true
  *         type: string
+ *       - name: "blocking"
+ *         in: "query"
+ *         description: "Blocks while pipeline is active."
+ *         required: false
+ *         type: boolean
+ *         default: true
  *       - name: "remoteLogs"
  *         in: "query"
  *         description: "Remote Log Stream"
@@ -514,7 +545,13 @@ pipeline.get('/:pipelineId/kill', asyncLogHandler(async (req, res) => {
  *           type: string
  */
 pipeline.get('/:pipelineId/next-step', asyncLogHandler(async (req, res) => {
-  await PipelineService.nextStepInPipeline(req.params['pipelineId'], req.query['step']);
+  if (req.query.blocking === undefined || req.query.blocking === 'true') {
+    log.debug('Server blocking on pipeline execution.');
+    await PipelineService.nextStepInPipeline(req.params['pipelineId'], req.query['step']);
+  } else {
+    log.debug('Server non-blocking on pipeline execution.');
+    PipelineService.nextStepInPipeline(req.params['pipelineId'], req.query['step']);
+  }
   res.send();
 }));
 
