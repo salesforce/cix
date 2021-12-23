@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "ajv": "7.0.3",
-    "axios": "0.21.1",
+    "axios": "0.24.0",
     "chalk": "4.1.0",
     "commander": "7.0.0",
     "deepdash": "5.3.5",
