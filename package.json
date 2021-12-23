@@ -34,7 +34,7 @@
     "dockerode": "3.2.1",
     "ejs": "3.1.5",
     "express": "4.17.1",
-    "helmet": "4.2.0",
+    "helmet": "4.6.0",
     "js-yaml": "4.0.0",
     "lodash": "4.17.21",
     "readline-sync": "1.4.10",
