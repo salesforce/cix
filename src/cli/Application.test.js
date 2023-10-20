@@ -1,13 +1,12 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global describe, expect */
-import {CLIError, NodeProvider} from '../common/index.js';
+import {CLIError, Logger, NodeProvider} from '../common/index.js';
 import {Application} from './Application';
-import log from 'winston';
 
 describe('Application.execute', () => {
   let app; let processMock;
@@ -41,28 +40,28 @@ describe('Application.execute', () => {
 
   test('validateWrapperScript: no version prints "out of date"', () => {
     delete processMock.env['CIX_WRAPPER_VERSION'];
-    const logWarn = jest.spyOn(log, 'warn').mockImplementation();
+    const logWarn = jest.spyOn(Logger, 'warn').mockImplementation();
     app.validateWrapperScript();
     expect(logWarn.mock.calls[0][0]).toEqual(expect.stringMatching(/out of date/));
   });
 
 
   test('validateWrapperScript: lower version warns "out of date"', () => {
-    const logWarn = jest.spyOn(log, 'warn').mockImplementation();
+    const logWarn = jest.spyOn(Logger, 'warn').mockImplementation();
     processMock.env['CIX_WRAPPER_VERSION'] = 1;
     app.validateWrapperScript();
     expect(logWarn.mock.calls[0][0]).toEqual(expect.stringMatching(/out of date/));
   });
 
   test('validateWrapperScript: higher version warns "newer than"', () => {
-    const logWarn = jest.spyOn(log, 'warn').mockImplementation();
+    const logWarn = jest.spyOn(Logger, 'warn').mockImplementation();
     processMock.env['CIX_WRAPPER_VERSION'] = 666;
     app.validateWrapperScript();
     expect(logWarn.mock.calls[0][0]).toEqual(expect.stringMatching(/newer than/));
   });
 
   test('validateWrapperScript: no warn if version is exact', () => {
-    const logWarn = jest.spyOn(log, 'warn').mockImplementation();
+    const logWarn = jest.spyOn(Logger, 'warn').mockImplementation();
     jest.spyOn(app, 'getWrapperScript').mockImplementation(() => '#!/bin/bash\nCIX_WRAPPER_VERSION=3');
     app.validateWrapperScript();
     expect(logWarn).not.toHaveBeenCalled();

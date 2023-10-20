@@ -3,13 +3,17 @@
 ## Set up your local development environment
 - Install required system dependencies
 	- [Install Docker on your workstation](install-docker.md)
-	- Install Node.js v12
-		- Using Brew
+	- Install volta (Warning: remove existing node if facing issues installing volta)
+		- install and link volta
 		```bash
-		brew install node@12
-		brew link node
+		curl https://get.volta.sh | bash
+		export VOLTA_HOME=~/.volta
+		export PATH=$VOLTA_HOME/bin:$PATH
 		```
-		- Or download the appropriate package from the [Node.js web site](https://nodejs.org/en/download/).
+		- install correct node version
+		```bash
+		volta install node@16.20.0 (Warning: you might have to get off Cisco Anyconnect VPN for this step. you can reconnect after this step)
+		```
 	- If you haven't already, [setup](https://confluence.internal.salesforce.com/pages/viewpage.action?spaceKey=NEXUS&title=Nexus+NPM+Repositories) access to the Nexus npm repositories
 - Clone the CIX repo
 	```bash

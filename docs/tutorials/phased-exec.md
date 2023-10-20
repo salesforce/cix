@@ -27,7 +27,7 @@ cix load -y docs/examples/phased-exec.yaml
 Load works just like `cix exec`, you can provide environment variables and secrets.
 
 ```shell
-cix load -y docs/examples/phased-exec.yaml -e FOO='foo' -s P4_PASSWORD='password'
+cix load -y docs/examples/phased-exec.yaml -e FOO='foo' -s P4_PASSWORD='********'
 ```
 
 If the server resides on another server or is running on an alternate port, you can specify either --host or --port.

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -59,23 +59,6 @@ describe('Steps.modifyPayload', () => {
     pipelineRootNode = emptyPipeline.getPipelineTreeRoot();
   });
 
-  test('Parallel steps get run in parallel.', async () => {
-    const steps = new Steps(_.cloneDeep(parallelGroup), pipelineRootNode);
-    expect(steps.isParallel()).toBeTruthy();
-    const descendants = steps.getDescendants();
-    expect(descendants.length).toBe(2);
-    mockRunStep.mockImplementation(() => {
-      return new Promise((resolve) => {
-        setTimeout(resolve, 1000);
-      });
-    });
-    const result = steps.start();
-    expect(descendants.filter((descendant) => descendant.getStatus() === 'running').length).toBe(2);
-    jest.runAllTimers();
-    await result;
-    expect(descendants.filter((descendant) => descendant.getStatus() === 'successful').length).toBe(2);
-  });
-
   test('serial steps get run in serial.', async () => {
     const steps = new Steps(_.cloneDeep(serialGroup), pipelineRootNode);
     expect(steps.isParallel()).toBeFalsy();
@@ -88,6 +71,23 @@ describe('Steps.modifyPayload', () => {
     });
     steps.start();
     expect(descendants.filter((descendant) => descendant.getStatus() === 'running').length).toBe(1);
+  });
+
+  test('Parallel steps get run in parallel.', async () => {
+    const steps = new Steps(_.cloneDeep(parallelGroup), pipelineRootNode);
+    expect(steps.isParallel()).toBeTruthy();
+    const descendants = steps.getDescendants();
+    expect(descendants.length).toBe(2);
+    mockRunStep.mockImplementation(() => {
+      return new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+    });
+    const result = steps.start();
+    expect(descendants.filter((descendant) => descendant.getStatus() === 'running').length).toBe(2);
+    jest.advanceTimersByTime(2000);
+    await result;
+    expect(descendants.filter((descendant) => descendant.getStatus() === 'successful').length).toBe(2);
   });
 
   test('Breakpoints in parallel block trigger all steps within that block.', async () => {

@@ -1,16 +1,16 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 import {PROTOCOLS, getProtocol} from './Protocols.js';
 import AbstractLoader from './AbstractLoader.js';
+import {ExecutionError} from '../Errors.js';
+import {Logger} from '../index.js';
 import Path from 'path';
-import {ValidateError} from '../Errors.js';
 import axios from 'axios';
 import https from 'https';
-import log from 'winston';
 
 export default class HTTPLoader extends AbstractLoader {
   constructor() {
@@ -30,25 +30,28 @@ export default class HTTPLoader extends AbstractLoader {
     }
   }
 
-  async fetch(path, environment) {
+  async fetch(path, environment, httpAuthToken) {
     const headers = {
       'User-Agent': 'CIX',
     };
 
-    let token = environment.getEnvironmentVariable('__IMPORT_YAML_DEFINITION__.http_authorization_token') ||
-                environment.getEnvironmentVariable('HTTP_AUTHORIZATION_TOKEN');
+    const envHttpAuthToken = environment.getEnvironmentVariable('HTTP_AUTHORIZATION_TOKEN');
 
-    if (token && token.value) {
-      token = environment.replace$$Values(token.value);
-    } else {
-      token = undefined;
+    // warn if user supplies both YAML based and environment based tokens
+    if (httpAuthToken && envHttpAuthToken && envHttpAuthToken.value) {
+      Logger.warn('Both the secret HTTP_AUTHORIZATION_TOKEN and the YAML attribute http-authorization-token were supplied.');
+      Logger.warn('Using the YAML attribute http-authorization-token as the auth token.');
     }
 
-    if (token) {
-      headers['Authorization'] = `token ${token}`;
-      log.debug(`Fetching ${path} with authorization tokens.`);
+    // httpAuthToken (from YAML) has precedence over envHttpAuthToken (from environment)
+    if (httpAuthToken) {
+      headers['Authorization'] = `token ${environment.replace$$Values(httpAuthToken)}`;
+      Logger.debug(`Fetching ${path} with authorization token set in the YAML.`);
+    } else if (envHttpAuthToken && envHttpAuthToken.value) {
+      headers['Authorization'] = `token ${environment.replace$$Values(envHttpAuthToken.value)}`;
+      Logger.debug(`Fetching ${path} with authorization token set in the Environment.`);
     } else {
-      log.debug(`Fetching ${path} without authorization tokens.`);
+      Logger.warn(`Fetching ${path} without authorization tokens.`);
     }
 
     try {
@@ -62,8 +65,8 @@ export default class HTTPLoader extends AbstractLoader {
       });
       return resp.data;
     } catch (error) {
-      log.error(`${error}`);
-      throw new ValidateError(`Unable to import HTTPS path ${path}`);
+      Logger.error(`${error}`);
+      throw new ExecutionError(`Unable to import HTTPS path ${path}`);
     }
   }
 }

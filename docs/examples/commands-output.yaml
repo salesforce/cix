@@ -1,0 +1,20 @@
+version: 2.1
+pipeline:
+  - step:
+      name: minimal
+      image: alpine:3.9
+      commands-output: minimal
+      commands:
+        - echo "You will only see stdout/stderr (minimal)"
+  - step:
+      name: echo
+      image: alpine:3.9
+      commands-output: echo
+      commands:
+        - echo "This echo command will be echo'd (echo without a timestamp)"
+  - step:
+      name: timestamp
+      image: alpine:3.9
+      commands-output: timestamp
+      commands:
+        - echo "This echo command will be echo'd (echo with a timestamp)"

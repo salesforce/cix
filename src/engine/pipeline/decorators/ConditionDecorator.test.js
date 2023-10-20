@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -188,6 +188,61 @@ describe('ConditionDecorator:', () => {
     expect(response).not.toEqual(promiseProvider);
   });
 
+  test('Returns provided promiseProvider on AND isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'AND',
+          'conditions': [
+            {
+              'operator': 'EQ', // will succeed
+              'value': 'foo',
+              'other': 'foo',
+            },
+            {
+              'operator': 'EQ', // will succeed
+              'value': 'bar',
+              'other': 'bar',
+            },
+          ],
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment()};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toEqual(promiseProvider);
+  });
+
+  test('Returns SimpleProvider Promise.resolve() on AND !isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'AND',
+          'conditions': [
+            {
+              'operator': 'EQ', // will fail
+              'value': 'foo',
+              'other': 'bar',
+            },
+            {
+              'operator': 'EQ', // will succeed
+              'value': 'bar',
+              'other': 'bar',
+            },
+          ],
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toBeInstanceOf(Provider.SimpleProvider);
+    expect(response).not.toEqual(promiseProvider);
+  });
+
   test('Returns provided promiseProvider on STARTS_WITH isValid.', () => {
     const payload = {
       'when': [
@@ -255,6 +310,112 @@ describe('ConditionDecorator:', () => {
 
     const response = condition(payload, parentNode, promiseProvider);
     expect(response).toBeInstanceOf(Provider.SimpleProvider);
+    expect(response).not.toEqual(promiseProvider);
+  });
+
+  test('Returns provided promiseProvider on MATCHES with CSV isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'MATCHES',
+          'value': 'afalko/main-244',
+          'expressions': 'foo,bar,afalko/main-\\d+',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toEqual(promiseProvider);
+  });
+
+  test('Returns provided promiseProvider on MATCHES with space delimiter isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'MATCHES',
+          'value': 'afalko/main-244',
+          'expressions': 'foo bar afalko/main-\\d+',
+          'delimiter': ' ',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toEqual(promiseProvider);
+  });
+
+  test('Returns provided promiseProvider on MATCHES with wrong delimiter !isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'MATCHES',
+          'value': 'afalko/main-244',
+          'expressions': 'foo bar afalko/main-\\d+',
+          'delimiter': '|',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).not.toEqual(promiseProvider);
+  });
+
+  test('Returns provided promiseProvider on MATCHES !isValid.', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'MATCHES',
+          'value': 'foo,bar,release_*',
+          'expressions': 'releases',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toBeInstanceOf(Provider.SimpleProvider);
+    expect(response).not.toEqual(promiseProvider);
+  });
+
+  test('Returns promiseProvider on MATCHES when valid .', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'MATCHES',
+          'value': 'test/mainmainmain',
+          'expressions': 'foo,bar,test/[main]*',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
+    expect(response).toEqual(promiseProvider);
+  });
+
+
+  test('Returns promiseProvider on NOT_MATCHES when valid .', () => {
+    const payload = {
+      'when': [
+        {
+          'operator': 'NOT_MATCHES',
+          'value': 'test/mainmainmain',
+          'expressions': 'foo,bar,test/[main]*',
+        },
+      ],
+    };
+    const parentNode = {'getEnvironment': () => new Environment(), 'getType': () => 'Step', 'setStatus': () => undefined};
+    const promiseProvider = 'test';
+
+    const response = condition(payload, parentNode, promiseProvider);
     expect(response).not.toEqual(promiseProvider);
   });
 });

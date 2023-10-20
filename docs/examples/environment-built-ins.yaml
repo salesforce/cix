@@ -11,3 +11,17 @@ pipeline:
         - echo $CIX_NETWORK_NAME
         - echo $CIX_CONTAINER_NAME
         - echo $CIX_EXECUTION_ID
+        - echo $CIX_SERVER_PORT
+        - pwd
+        - echo $CIX_WORKDIR
+        - echo $CIX_WORKSPACE
+        - echo $CIX_TEMP
+  - step:
+      name: override-work-dir
+      image: alpine:3.9
+      working-dir: /bin
+      workspace-mount-point: /tmp
+      commands:
+        - pwd
+        - echo $CIX_WORKDIR
+        - echo $CIX_WORKSPACE

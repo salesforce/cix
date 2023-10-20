@@ -1,14 +1,13 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global jest, describe, expect */
-import {PluginError, _} from '../../common/index.js';
+import {Logger, PluginError, _} from '../../common/index.js';
 import {DockerExec} from '../../docker/index.js';
 import Plugin from './Plugin.js';
-import log from 'winston';
 
 jest.autoMockOff();
 
@@ -64,7 +63,7 @@ describe('Plugin tests', () => {
     jest.spyOn(_, 'fetch').mockResolvedValue('version: 2.4\nkind: Plugin');
     const plugin = new Plugin({pluginPath: '/blah'});
     await plugin.loadAndValidate();
-    const logDebug = jest.spyOn(log, 'debug').mockImplementation();
+    const logDebug = jest.spyOn(Logger, 'debug').mockImplementation();
     await plugin.runPreprocessor();
     expect(logDebug.mock.calls[0][0]).toEqual(expect.stringMatching(/Skipping preprocessor/));
   });
@@ -84,7 +83,7 @@ describe('Plugin tests', () => {
   });
 
   test('runPreprocessor throws PluginError with result.output when exec.runPreprocessor returns a non-0 status', async () => {
-    const logError = jest.spyOn(log, 'error').mockImplementation();
+    const logError = jest.spyOn(Logger, 'error').mockImplementation();
     jest.spyOn(_, 'fetch').mockResolvedValue('version: 2.4\nkind: Plugin\npreprocessor:\n  image: test:latest');
     const plugin = new Plugin({pluginPath: '/blah'});
     await plugin.loadAndValidate();

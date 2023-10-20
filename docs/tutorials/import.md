@@ -98,13 +98,15 @@ pipeline:
 ```
 To import a section of the library file, simply just use `.` notation for the qualified name of the step.
 
-## Importing from GIT
-!> Experimental feature.
-!> To use GIT, the user must supply a GIT Auth Token environment variable called HTTP_AUTHORIZATION_TOKEN
+## Using GIT
 
-There are two ways to use GIT.
+> GIT requires the user to provide GIT PAT (personal access token)
 
-The first way is you can load a git URL from the command line:
+There are three ways to use GIT with the PAT:
+
+1. You load a GIT URL from the command line, but you must supply the secret `HTTP_AUTHORIZATION_TOKEN`.
+```sh
+cix exec -y https://github.com/raw/ci/cix/master/docs/examples/import/imports.yaml --secret-prompt HTTP_AUTHORIZATION_TOKEN
 ```
 Example:
 

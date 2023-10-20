@@ -10,7 +10,7 @@ Your pipeline definition (YAML) files are also expected to be accessible from un
 
 ## Container Network
 
-In Docker mode, CIX creates a private network for the containers of a pipeline. This allows the containers to communicate
+In Docker mode, CIX creates an ephemeral private network for the containers of a pipeline. This allows the containers to communicate
 freely with each other, while being isolated from other containers on the host.
 
 It also allows for private DNS resolution, so that containers may refer to each other by their simple step names and
@@ -18,6 +18,17 @@ It also allows for private DNS resolution, so that containers may refer to each 
 
 Containers in the same pipeline can also communicate with each other without need to export or specify ports. Containers
 can connect to other concurrent containers on any port.
+
+You can provide your own network or switch to `host` networking by exporting the environment variable `DOCKER_NETWORK` before running CIX. This will skip creating the ephemeral network.
+
+>! For `host` networking, DNS resolution and container communication may not have full feature parity with an ephemeral docker network.
+
+```sh
+DOCKER_NETWORK=host cix exec
+# OR
+docker network create my-network
+DOCKER_NETWORK=my-network cix exec 
+```
 
 These topics are covered in more detail in the [Background Services](tutorials/background) tutorial.
 

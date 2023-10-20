@@ -4,6 +4,5 @@ pipeline:
       name: basic
       image: alpine:3.9
       commands:
-        # - sleep 5
         - dd if=/dev/urandom bs=64 count=1000000 | base64
         - echo "complete"

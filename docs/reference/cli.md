@@ -20,6 +20,8 @@ The `-l --logging <mode>` option takes one of the following modes to set the log
   * Each container's output is logged to its own separate file, in the directory specified by the
 `-p --logging-path <path>` option. CIX's general output is printed to the standard output streams as
 well as the file `cix-execution.log`.
+* `file`
+  * Logs are written to a single file: `cix-execution.log`, in the directory specified by the `-p --logging-path <path>` option.
 
 ## Logging Levels
 Logging is performed by the `winston` module, and the verbosity level can be specified with the
@@ -50,25 +52,32 @@ Usage: cix exec [options]
 Executes a pipeline.
 
 Options:
-  -c, --configfile <path>    Specify a cix configuration file to load.
-  -e, --env <mapping>        Specify environment variable.  Mapping should be in the form of KEY (value taken from environment) or KEY=VALUE.
-  -s, --secret <mapping>     Specify a secret (insecure). Mapping should be in the form of KEY (secret taken from environment) or KEY=SECRET.
-  -w, --workspace <path>     Specify the workspace path.  Default path is the current working directory.
-  -l, --logging <mode>       Specify container output logging mode: console, or files (separate files).
-  -p, --logging-path <path>  Path where logs created by the 'files' logging mode will be stored. (default: "logs")
-  -y, --yaml <path>          Path to pipeline definition YAML file. May be repeated.
-  --plugin <path>            Path to plugin YAML file. May be repeated.
-  --setup <path>             Path to setup pipeline YAML file.
-  --teardown <path>          Path to teardown pipeline YAML file.
-  --secret-prompt <key>      CIX will prompt you for the value of the key specified. May be repeated.
-  --secret-stdin <key>       CIX will assign a value passed via stdin to the key specified. Cannot be used with --secrets-stdin.
-  --secrets-stdin            CIX will accept a map of key/value pairs in JSON format via stdin. Cannot be used with --secret-stdin.
-  --host <host>              CIX Server to connect to (default: "127.0.0.1")
-  --port <port>              CIX Server to connect to (default: "10030")
-  --remote                   CIX will execute against a remote CIX Server.
-  --non-blocking             Disables the blocking wait until a remote execution is complete.
-  --no-remote-logs           Disables streaming logs from Server.
-  -h, --help                 display help for command
+  -a, --pipeline-alias <pipeline-alias>  Assign an alias for the pipeline.
+  -c, --configfile <path>                Specify a cix configuration file to load.
+  -e, --env <mapping>                    Specify environment variable.  Mapping should be in the form of KEY (value taken from environment) or KEY=VALUE.
+  -l, --logging <mode>                   Specify container output logging mode: console, file (single file), or files (separate files for each step)).
+  -L, --logname <name>                   Specify a custom name for the CIX application log file.
+  -p, --logging-path <path>              Path where logs created by the 'files' logging mode will be stored. (default: "logs")
+  -P, --pull-policy <policy>             Overrides the pull-policy for Docker pulls, when it is not specified in the pipeline definition. (choices: "Always", "Default",
+                                         "IfNotPresent", "Never", default: "Default")
+  -s, --secret <mapping>                 Specify a secret (insecure). Mapping should be in the form of KEY (secret taken from environment) or KEY=SECRET.
+  -w, --workspace <path>                 Specify the workspace path.  Default path is the current working directory.
+  -y, --yaml <path>                      Path to pipeline definition YAML file. May be repeated.
+  --plugin <path>                        Path to plugin YAML file. May be repeated.
+  --setup <path>                         Path to setup pipeline YAML file.
+  --teardown <path>                      Path to teardown pipeline YAML file.
+  --secret-prompt <key>                  CIX will prompt you for the value of the key specified. May be repeated.
+  --secret-stdin <key>                   CIX will assign a value passed via stdin to the key specified. Cannot be used with --secrets-stdin.
+  --secrets-stdin                        CIX will accept a map of key/value pairs in JSON format via stdin. Cannot be used with --secret-stdin.
+  --host <host>                          CIX Server to connect to (default: "127.0.0.1")
+  --port <port>                          CIX Server to connect to (default: "10030")
+  --color                                Force console logs to include ANSI color codes
+  --no-color                             Force console logs to not include ANSI color codes (overrides --color)
+  --silent                               Silence logging
+  --remote                               CIX will execute against a remote CIX Server.
+  --non-blocking                         Disables the blocking wait until a remote execution is complete.
+  --no-remote-logs                       Disables streaming logs from Server.
+  -h, --help                             display help for command
 ```
 
 ## cix validate
@@ -92,6 +101,9 @@ Options:
   --remote                CIX will execute against a remote CIX Server.
   --host <host>           CIX Server to connect to (default: "127.0.0.1")
   --port <port>           CIX Server to connect to (default: "10030")
+  --color                 Force console logs to include ANSI color codes
+  --no-color              Force console logs to not include ANSI color codes (overrides --color)
+  --silent                Silence logging
   -h, --help              display help for command
 ```
 
@@ -107,10 +119,14 @@ Starts a local CIX server.
 Options:
   -c, --configfile <path>    Specify a cix configuration file to load.
   -d, --detach               Shell command only: detach the server container from the console.
-  -w, --workspace <path>     Specify the workspace path.  Default path is the current working directory.
-  --port <port>              CIX Server Port (default: "10030")
-  -l, --logging <mode>       Specify container output logging mode: console, or files (separate files) (default: "files")
+  -l, --logging <mode>       Specify container output logging mode: console, file (single file), or files (separate files for each step))
+  -L, --logname <name>       Specify a custom name for the CIX application log file.
   -p, --logging-path <path>  Path where logs created by the 'files' logging mode will be stored. (default: "logs")
+  --port <port>              CIX Server Port (default: "10030")
+  -w, --workspace <path>     Specify the workspace path.  Default path is the current working directory.
+  --color                    Force console logs to include ANSI color codes
+  --no-color                 Force console logs to not include ANSI color codes (overrides --color)
+  --silent                   Silence logging
   -h, --help                 display help for command
 ```
 
@@ -126,22 +142,29 @@ Usage: cix load [options]
 Loads a pipeline onto a remote CIX Server.
 
 Options:
-  -c, --configfile <path>    Specify a cix configuration file to load.
-  -e, --env <mapping>        Specify environment variable.  Mapping should be in the form of KEY (value taken from environment) or KEY=VALUE.
-  -s, --secret <mapping>     Specify a secret (insecure). Mapping should be in the form of KEY (secret taken from environment) or KEY=SECRET.
-  -w, --workspace <path>     Specify the workspace path.  Default path is the current working directory.
-  -l, --logging <mode>       Specify container output logging mode: console, or files (separate files).
-  -p, --logging-path <path>  Path where logs created by the 'files' logging mode will be stored. (default: "logs")
-  -y, --yaml <path>          Path to pipeline definition YAML file. May be repeated.
-  --plugin <path>            Path to plugin YAML file. May be repeated.
-  --setup <path>             Path to setup pipeline YAML file.
-  --teardown <path>          Path to teardown pipeline YAML file.
-  --secret-prompt <key>      CIX will prompt you for the value of the key specified. May be repeated.
-  --secret-stdin <key>       CIX will assign a value passed via stdin to the key specified. Cannot be used with --secrets-stdin.
-  --secrets-stdin            CIX will accept a map of key/value pairs in JSON format via stdin. Cannot be used with --secret-stdin.
-  --host <host>              CIX Server to connect to (default: "127.0.0.1")
-  --port <port>              CIX Server to connect to (default: "10030")
-  -h, --help                 display help for command
+  -a, --pipeline-alias <pipeline-alias>  Assign an alias for the pipeline.
+  -c, --configfile <path>                Specify a cix configuration file to load.
+  -e, --env <mapping>                    Specify environment variable.  Mapping should be in the form of KEY (value taken from environment) or KEY=VALUE.
+  -l, --logging <mode>                   Specify container output logging mode: console, file (single file), or files (separate files for each step)).
+  -L, --logname <name>                   Specify a custom name for the CIX application log file.
+  -p, --logging-path <path>              Path where logs created by the 'files' logging mode will be stored. (default: "logs")
+  -P, --pull-policy <policy>             Overrides the pull-policy for Docker pulls, when it is not specified in the pipeline definition. (choices: "Always", "Default",
+                                         "IfNotPresent", "Never", default: "Default")
+  -s, --secret <mapping>                 Specify a secret (insecure). Mapping should be in the form of KEY (secret taken from environment) or KEY=SECRET.
+  -w, --workspace <path>                 Specify the workspace path.  Default path is the current working directory.
+  -y, --yaml <path>                      Path to pipeline definition YAML file. May be repeated.
+  --plugin <path>                        Path to plugin YAML file. May be repeated.
+  --setup <path>                         Path to setup pipeline YAML file.
+  --teardown <path>                      Path to teardown pipeline YAML file.
+  --secret-prompt <key>                  CIX will prompt you for the value of the key specified. May be repeated.
+  --secret-stdin <key>                   CIX will assign a value passed via stdin to the key specified. Cannot be used with --secrets-stdin.
+  --secrets-stdin                        CIX will accept a map of key/value pairs in JSON format via stdin. Cannot be used with --secret-stdin.
+  --host <host>                          CIX Server to connect to (default: "127.0.0.1")
+  --port <port>                          CIX Server to connect to (default: "10030")
+  --color                                Force console logs to include ANSI color codes
+  --no-color                             Force console logs to not include ANSI color codes (overrides --color)
+  --silent                               Silence logging
+  -h, --help                             display help for command
 ```
 
 ## cix pipelines
@@ -156,12 +179,17 @@ Usage: cix pipelines [options]
 Lists information about pipelines.
 
 Options:
-  --default                    Displays default pipeline.
-  --set-default <pipeline-id>  Sets the default pipeline.
-  --status [pipeline-id]       Displays the status of a pipeline.
-  --host <host>                CIX Server to connect to (default: "127.0.0.1")
-  --port <port>                CIX Server to connect to (default: "10030")
-  -h, --help                   display help for command
+  --get-alias <pipeline-alias>       Gets the pipeline for an alias.
+  --set-alias <pipeline-alias>       Sets the alias to a pipeline (--pipeline-id required).
+  --pipeline-id <pipeline-id>        ID for setting alias.
+  --pipeline-alias <pipeline-alias>  Alias for checking status.
+  --status                           Displays the status of a pipeline (--pipeline-id optional).
+  --host <host>                      CIX Server to connect to (default: "127.0.0.1")
+  --port <port>                      CIX Server to connect to (default: "10030")
+  --color                            Force console logs to include ANSI color codes
+  --no-color                         Force console logs to not include ANSI color codes (overrides --color)
+  --silent                           Silence logging
+  -h, --help                         display help for command
 ```
 
 ## cix resume
@@ -184,6 +212,9 @@ Options:
   --no-remote-logs                   Disables streaming logs from Server.
   --host <host>                      CIX Server to connect to (default: "127.0.0.1")
   --port <port>                      CIX Server to connect to (default: "10030")
+  --color                            Force console logs to include ANSI color codes
+  --no-color                         Force console logs to not include ANSI color codes (overrides --color)
+  --silent                           Silence logging
   -h, --help                         display help for command
 ```
 
@@ -200,12 +231,17 @@ Usage: cix describe [options]
 Displays the sequence of the steps.
 
 Options:
-  --file <location>  Write the Pipeline steps to a file.
-  --stdout           Write the Pipeline steps to standard output.
-  --stderr           Write the Pipeline steps to standard error.
-  --host <host>      CIX Server to connect to (default: "127.0.0.1")
-  --port <port>      CIX Server to connect to (default: "10030")
-  -h, --help         display help for command
+  --pipeline-id <pipeline-id>        Pipeline ID to resume (default: "latest" alias)
+  --pipeline-alias <pipeline-alias>  Pipeline Alias to resume. (default: "latest" alias)
+  --file <location>                  Write the Pipeline steps to a file.
+  --stdout                           Write the Pipeline steps to standard output.
+  --stderr                           Write the Pipeline steps to standard error.
+  --host <host>                      CIX Server to connect to (default: "127.0.0.1")
+  --port <port>                      CIX Server to connect to (default: "10030")
+  --color                            Force console logs to include ANSI color codes
+  --no-color                         Force console logs to not include ANSI color codes (overrides --color)
+  --silent                           Silence logging
+  -h, --help                         display help for command
 ```
 
 ## cix kill
@@ -222,6 +258,9 @@ Kills a running pipeline.
 Options:
   --host <host>  CIX Server to connect to (default: "127.0.0.1")
   --port <port>  CIX Server to connect to (default: "10030")
+  --color        Force console logs to include ANSI color codes
+  --no-color     Force console logs to not include ANSI color codes (overrides --color)
+  --silent       Silence logging
   -h, --help     display help for command
 ```
 
@@ -243,6 +282,9 @@ Starts the pipeline server component for phased execution.
 
 Options:
   --location <location>  Installation location (default: "/usr/local/bin")
+  --color                Force console logs to include ANSI color codes
+  --no-color             Force console logs to not include ANSI color codes (overrides --color)
+  --silent               Silence logging
   -h, --help             display help for command
 ```
 
@@ -253,5 +295,8 @@ Usage: cix update [options]
 Shell command only: updates the CIX docker image from the registry.
 
 Options:
+  --color     Force console logs to include ANSI color codes
+  --no-color  Force console logs to not include ANSI color codes (overrides --color)
+  --silent    Silence logging
   -h, --help  display help for command
 ```

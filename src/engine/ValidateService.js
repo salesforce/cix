@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -9,14 +9,12 @@ import Validate from './validate/Validate.js';
 
 /**
  * @class
- *
  * @description Services all engine calls.
  */
 class ValidateService {
   /**
    * @function module:engine.ValidateService#validatePipelineSchema
    * @description Validates and loads a yaml.
-   *
    * @async
    * @param {object} definition - A object representation of a pipeline.
    * @returns {Array} List of errors.
@@ -28,7 +26,6 @@ class ValidateService {
   /**
    * @function module:engine.ValidateService#validatePluginSchema
    * @description Validates and loads a plugin yaml.
-   *
    * @async
    * @param {object} definition - A object representation of a plugin.
    * @returns {Array} List of errors.
@@ -40,7 +37,6 @@ class ValidateService {
   /**
    * @function module:engine.ValidateService#validatePipeline
    * @description Validates and loads a yaml.
-   *
    * @async
    * @param {object} pipelineSpec - All parameters are sent in this object.
    * @returns {object} The validated/loaded YAML Pipeline.

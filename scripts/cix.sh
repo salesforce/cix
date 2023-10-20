@@ -1,5 +1,5 @@
 #!/bin/bash
-CIX_WRAPPER_VERSION=8
+CIX_WRAPPER_VERSION=9
 
 #
 # Run and update the CIX (CI Executor) container.
@@ -52,7 +52,7 @@ fi
 
 # The default port setting is 10030, we need to expose this for the server command, as well as the exec
 # command if the --remote option is not set
-PORT=$DEFAULT_CIX_PORT
+PORT=$DEFAULT_CIX_SERVER_PORT
 
 # Extract --port <number> from args.
 for (( i = 1; i <= $#; i++ )); do
@@ -120,9 +120,11 @@ if [[ $DOCKER_HOST ]]; then
     SET_DOCKER_HOST="-e DOCKER_HOST=$DOCKER_HOST"
 fi
 
+if [[ $DOCKER_NETWORK ]]; then
+    SET_RUNTIME_CONTAINER_NETWORK="-e DOCKER_NETWORK=$DOCKER_NETWORK"
+fi
 if [[ $CIX_DOCKER_NETWORK ]]; then
-    unset EXPOSE_PORT
-    SET_DOCKER_NETWORK="--network $CIX_DOCKER_NETWORK"
+    SET_CIX_CONTAINER_NETWORK="--network $CIX_DOCKER_NETWORK"
 fi
 
 # Detect ENV passthrough options
@@ -153,7 +155,8 @@ $EXEC docker run \
     $USE_TTY \
     $DETACH \
     $SET_NAME \
-    $SET_DOCKER_NETWORK \
+    $SET_CIX_CONTAINER_NETWORK \
+    $SET_RUNTIME_CONTAINER_NETWORK \
     -e CIX_WRAPPER_VERSION=$CIX_WRAPPER_VERSION \
     -e CIX_WRAPPER_IMAGE=$CIX_IMAGE \
     $ENV_PASSTHROUGH_ARGS \

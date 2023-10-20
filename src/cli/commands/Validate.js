@@ -1,16 +1,15 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 import AbstractRemoteCommand from './AbstractRemoteCommand.js';
-import log from 'winston';
+import {Logger} from '../../common/index.js';
 
 export default class Validate extends AbstractRemoteCommand {
   /**
    * @class
-   *
    * @description Validate Command.
    */
   constructor() {
@@ -20,9 +19,7 @@ export default class Validate extends AbstractRemoteCommand {
   /**
    * @function module:cli.Validate#registerOptions
    * @description Registers the command's options with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerOptions(program) {
@@ -39,9 +36,7 @@ export default class Validate extends AbstractRemoteCommand {
   /**
    * @function module:cli.Validate#registerDescription
    * @description Registers the command's description with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerDescription(program) {
@@ -51,20 +46,17 @@ export default class Validate extends AbstractRemoteCommand {
   /**
    * @function module:cli.Validate#action
    * @description Runs the install sub command.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   async action(options) {
     this.validateOptions(options);
-    this.configureLogger(options);
 
     const pipelineList = this.generateListOfPipelines(options);
 
-    log.silly(`Validating pipelines: ${JSON.stringify(pipelineList)}`);
+    Logger.silly(`Validating pipelines: ${JSON.stringify(pipelineList)}`);
     for (let i = 0; i < pipelineList.length; i++) {
-      log.silly(`Validating Pipeline ${i + 1} of ${pipelineList.length}: ${JSON.stringify(pipelineList[i])}`);
+      Logger.silly(`Validating Pipeline ${i + 1} of ${pipelineList.length}: ${JSON.stringify(pipelineList[i])}`);
       const pipelineSpec = {};
 
       pipelineSpec.yamlPath = pipelineList[i].yaml;

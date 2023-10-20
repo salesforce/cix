@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -207,5 +207,247 @@ describe('Step tests:', () => {
       'workspace-mount-point': '/tmp/project',
     }, pipelineRootNode);
     expect(step.definition['workspace-mount-point']).toEqual('/tmp/project');
+  });
+});
+
+describe('Step looping tests:', () => {
+  let emptyPipeline;
+  let pipelineRootNode;
+  const mockRunStep = jest.fn().mockResolvedValue();
+
+  beforeEach( async () => {
+    emptyPipeline = new Pipeline({rawPipeline: {version: 2.1, pipeline: [{}]}});
+    await emptyPipeline.loadAndValidate();
+    emptyPipeline.getExec = jest.fn().mockImplementation(() => {
+      return {runStep: mockRunStep, constructor: {name: 'Pipeline'}};
+    });
+    pipelineRootNode = emptyPipeline.getPipelineTreeRoot();
+    jest.clearAllMocks();
+  });
+
+  test('Step:getParent(): returns parent.', () => {
+    const step = new Step({
+      name: 'basic',
+      image: 'alpine:3.9',
+      commands: ['hostname'],
+    }, pipelineRootNode);
+    expect(step.getParent()).toEqual(pipelineRootNode);
+  });
+
+  test('Step:start(): loop will run step n times.', async () => {
+    const step = new Step({
+      name: 'basic',
+      loop: 3,
+      image: 'alpine:3.9',
+      commands: ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(3);
+  });
+
+  test('Step:start(): loop will not run if count is 0.', async () => {
+    const step = new Step({
+      name: 'basic',
+      loop: 0,
+      image: 'alpine:3.9',
+      commands: ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(0);
+  });
+
+  test('Step:start(): loop with count 1 is fine.', async () => {
+    const step = new Step({
+      name: 'basic',
+      loop: 1,
+      image: 'alpine:3.9',
+      commands: ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(1);
+  });
+
+  test('Step:start(): loop only takes numeric values.', async () => {
+    const step = new Step({
+      name: 'basic',
+      loop: 'a',
+      image: 'alpine:3.9',
+      commands: ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(0);
+  });
+
+  test('Step:start(): loop quoted strings work.', async () => {
+    const step = new Step({
+      name: 'basic',
+      loop: '2',
+      image: 'alpine:3.9',
+      commands: ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(2);
+  });
+
+  test('Step:start(): counter-variable can be set.', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'loop': '2',
+      'counter-variable': 'COUNTER',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls[0][0].environment).toEqual([{name: 'COUNTER', value: '1'}]);
+    expect(mockRunStep.mock.calls[1][0].environment).toEqual([{name: 'COUNTER', value: '2'}]);
+  });
+
+  test('Step:start(): cannot use for-each and loop.', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'loop': '2',
+      'for-each': 'a,b,c,d',
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    try {
+      await step.start();
+    } catch (err) {
+      expect(err.message).toEqual('Cannot use both for-each and loop within the same step.');
+    }
+    expect(mockRunStep.mock.calls.length).toEqual(0);
+    expect.assertions(2);
+  });
+
+  test('Step:start(): for-each will run CSV list.', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': 'a,b,c,d',
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(4);
+  });
+
+  test('Step:start(): for-each will accept a single value', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': 'a',
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(1);
+  });
+
+  test('Step:start(): for-each with no value will not run', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': '',
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(0);
+  });
+
+  test('Step:start(): for-each with no value will not run (as YAML)', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': [''],
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(0);
+  });
+
+  test('Step:start(): for-each can use counter-variable', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': ['a', 'b'],
+      'element-variable': 'e',
+      'counter-variable': 'c',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls[0][0].environment).toEqual([{name: 'e', value: 'a'}, {name: 'c', value: '1'}]);
+    expect(mockRunStep.mock.calls[1][0].environment).toEqual([{name: 'e', value: 'b'}, {name: 'c', value: '2'}]);
+    expect(mockRunStep.mock.calls.length).toEqual(2);
+  });
+
+  test('Step:start(): for-each will run YAML list.', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': ['a', 'b', 'c', 'd'],
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(4);
+  });
+
+  test('Step:start(): for-each will ignore trailing comma.', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': 'a,b,c,',
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(3);
+  });
+
+
+  test('Step:start(): for-each must provide element-variable.', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': 'a,b,c,d',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+    try {
+      await step.start();
+    } catch (err) {
+      expect(err.message).toMatch('for-each must include an element-variable definition.');
+    }
+    expect(mockRunStep.mock.calls.length).toEqual(0);
+    expect.assertions(2);
+  });
+
+  test('Step:start(): for-each will substitute and environment variable.', async () => {
+    emptyPipeline.getEnvironment().addEnvironmentVariable({name: 'LOOP', value: 'a,b,c'});
+    const step = new Step({
+      'name': 'basic',
+      'for-each': '$$LOOP',
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(3);
+  });
+
+  test('Step:start(): for-each with un-substituted variable will skip.', async () => {
+    const step = new Step({
+      'name': 'basic',
+      'for-each': '$$LOOP',
+      'element-variable': 'i',
+      'image': 'alpine:3.9',
+      'commands': ['hostname'],
+    }, pipelineRootNode);
+
+    await step.start();
+    expect(mockRunStep.mock.calls.length).toEqual(0);
   });
 });

@@ -1,12 +1,12 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global beforeEach, describe, expect */
 import AbstractCommand from './AbstractCommand.js';
-import log from 'winston';
+import {Logger} from '../../common/index.js';
 
 class ImplementedCommand extends AbstractCommand {
   constructor() {
@@ -62,16 +62,16 @@ describe('Application.configureLogger', () => {
   });
 
   afterEach(() => {
-    if (log.fileLogging) {
-      delete log.fileLogging;
+    if (Logger.fileLogging) {
+      delete Logger.fileLogging;
     }
   });
 
   // TODO: leaked file handle...
   test.skip('We add a file logger...', () => {
-    const logAdd = jest.spyOn(log, 'add').mockImplementation(() => {});
+    const logAdd = jest.spyOn(Logger, 'add').mockImplementation(() => {});
     implCommand.configureLogger({logging: 'files', loggingPath: '/dev/null'});
     expect(logAdd).toHaveBeenCalled();
-    expect(log.fileLogging).toEqual({'enabled': true, 'path': '/dev/null'});
+    expect(Logger.fileLogging).toEqual({'enabled': true, 'path': '/dev/null'});
   });
 });

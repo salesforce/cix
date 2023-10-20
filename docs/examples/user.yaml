@@ -1,0 +1,21 @@
+version: 2.1
+pipeline:
+  - step:
+      name: set-user
+      image: alpine:3.9
+      user: 12300
+      commands:
+        - id
+  - step:
+      name: set-uid-and-gid
+      image: alpine:3.9
+      user: 12300:12300
+      commands:
+        - id
+  - step:
+      name: set-user-string
+      image: alpine:3.9
+      # 'games' is a user listed in the alpine image's /etc/passwd file
+      user: games
+      commands:
+        - id

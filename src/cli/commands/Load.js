@@ -1,20 +1,18 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {CIXError, CLIError, NodeProvider, PluginError, _} from '../../common/index.js';
+import {CIXError, CLIError, Logger, NodeProvider, PluginError, _} from '../../common/index.js';
 import AbstractRemoteCommand from './AbstractRemoteCommand.js';
-import log from 'winston';
+import {program as commander} from 'commander';
 import readlineSync from 'readline-sync';
 
 export default class Load extends AbstractRemoteCommand {
   /**
    * @class
-   *
    * @description Load Command.
-   *
    * @param {string} name - name of the concrete class.
    */
   constructor(name) {
@@ -26,9 +24,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#registerOptions
    * @description Registers the command's options with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerOptions(program) {
@@ -36,11 +32,17 @@ export default class Load extends AbstractRemoteCommand {
     program.option('-c, --configfile <path>', 'Specify a cix configuration file to load.');
     program.option('-e, --env <mapping>', 'Specify environment variable.  Mapping should be in the form of KEY ' +
       '(value taken from environment) or KEY=VALUE.', this.collectKeyValue);
+    program.option('-l, --logging <mode>', 'Specify container output logging mode: console, file (single file), or files (separate files for each step)).');
+    program.option('-L, --logname <name>', 'Specify a custom name for the CIX application log file.');
+    program.option('-p, --logging-path <path>', 'Path where logs created by the \'files\' logging mode will be stored. (default: "logs")');
+    program.addOption(
+      new commander.Option('-P, --pull-policy <policy>', 'Overrides the pull-policy for Docker pulls, when it is not specified in the pipeline definition.')
+        .choices(['Always', 'Default', 'IfNotPresent', 'Never'])
+        .default('Default'),
+    );
     program.option('-s, --secret <mapping>', 'Specify a secret (insecure). Mapping should be in the form of KEY ' +
       '(secret taken from environment) or KEY=SECRET.', this.collectKeyValueAndWarn.bind(this));
     program.option('-w, --workspace <path>', 'Specify the workspace path.  Default path is the current working directory.');
-    program.option('-l, --logging <mode>', 'Specify container output logging mode: console, or files (separate files).');
-    program.option('-p, --logging-path <path>', 'Path where logs created by the \'files\' logging mode will be stored. (default: "logs")');
     program.option('-y, --yaml <path>', 'Path to pipeline definition YAML file. May be repeated.', this.collectValues.bind(this));
     program.option('--plugin <path>', 'Path to plugin YAML file. May be repeated.', this.collectValues.bind(this));
     program.option('--setup <path>', 'Path to setup pipeline YAML file.');
@@ -54,9 +56,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#registerDescription
    * @description Registers the command's description with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerDescription(program) {
@@ -66,9 +66,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#validateOptions
    * @description Check command line parameters.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   validateOptions(options) {
@@ -98,9 +96,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#action
    * @description Runs the Load sub command.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   async action(options) {
@@ -118,7 +114,6 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#getStdin
    * @description Mockable method which returns the stdin stream.
-   *
    * @returns {object} a readable stream
    */
   getStdin() {
@@ -128,9 +123,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#setInput
    * @description Provides a way to override input from the CLI.
-   *
    * @param {string} input - Data representing input to the program (stdin).
-   *
    * @returns {undefined}
    */
   setInput(input) {
@@ -140,9 +133,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.AbstractCommand#acceptInput
    * @description Sets up the command to accept input from stdin.
-   *
    * @param {Function} onEnd - Called when all input has been collected
-   *
    * @returns {undefined}
    */
   acceptInput(onEnd) {
@@ -162,9 +153,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#actionCallback
    * @description Runs the remainder of the Load sub command, as a callback when input is required.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   async actionCallback(options) {
@@ -173,16 +162,18 @@ export default class Load extends AbstractRemoteCommand {
 
     const plugins = await this.loadPlugin(options);
     const pipelineList = this.generateListOfPipelines(options);
-    log.silly(`Adding new pipelines: ${JSON.stringify(pipelineList)}`);
+    Logger.silly(`Adding new pipelines: ${JSON.stringify(pipelineList)}`);
 
     // Add and link all chained pipelines
     for (let i = 0; i < pipelineList.length; i++) {
-      log.silly(`Adding Pipeline ${i + 1} of ${pipelineList.length}: ${JSON.stringify(pipelineList[i])}`);
+      Logger.silly(`Adding Pipeline ${i + 1} of ${pipelineList.length}: ${JSON.stringify(pipelineList[i])}`);
       const pipelineSpec = {};
 
       if (!_.isEmpty(plugins)) {
         pipelineSpec.plugins = plugins;
       }
+
+      pipelineSpec.defaultPullPolicy = options.pullPolicy;
 
       pipelineSpec.yamlPath = pipelineList[i].yaml;
       if (!_.isNil(pipelineList[i].type) && pipelineList[i].type == 'teardown') {
@@ -212,9 +203,10 @@ export default class Load extends AbstractRemoteCommand {
           pipelineSpec.environment = [];
         }
         pipelineSpec.environment.push({name: 'CIX_HOSTNAME', value: options.host, type: 'internal'});
+        pipelineSpec.environment.push({name: 'CIX_SERVER_PORT', value: options.port, type: 'internal'});
         response = await this.getPipelineService().addPipeline(pipelineSpec);
       }
-      log.silly(`Got back Pipeline ${JSON.stringify(response)}`);
+      Logger.silly(`Got back Pipeline ${JSON.stringify(response)}`);
 
       if (_.isNil(response) || _.isNil(response.id)) {
         throw new CIXError('Response invalid');
@@ -235,7 +227,7 @@ export default class Load extends AbstractRemoteCommand {
     }
 
     if (this.name === 'load') {
-      log.info('INFO: Pipeline(s) loaded, use \'cix resume\' to continue.');
+      Logger.info('INFO: Pipeline(s) loaded, use \'cix resume\' to continue.');
     }
 
     // return the first Pipeline ID, so caller can kick off the pipeline chain
@@ -245,23 +237,21 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#loadPlugin
    * @description Loads any plugins defined in options.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {Array} list of pipeline ids.
    */
   async loadPlugin(options) {
     const ids = [];
     if (options.plugin) {
-      log.info(`Plugins to load: ${options.plugin}`);
+      Logger.info(`Plugins to load: ${options.plugin}`);
       let pluginApi;
       if (this.name === 'load' || options.remote) {
         pluginApi = await this.getPluginApi(options);
         for (const plugin in options.plugin) {
-          log.silly(`Adding plugin ${options.plugin[plugin]}`);
+          Logger.silly(`Adding plugin ${options.plugin[plugin]}`);
           const response = await pluginApi.addPlugin({'pluginSpec': {'pluginPath': options.plugin[plugin]}});
           if (response.body && response.body.id) {
-            log.silly(`Created plugin ${response.body.id}`);
+            Logger.silly(`Created plugin ${response.body.id}`);
             ids.push(response.body);
           } else {
             throw new PluginError('Did not get back ID from server.');
@@ -270,7 +260,7 @@ export default class Load extends AbstractRemoteCommand {
       } else {
         pluginApi = this.getPluginService();
         for (const plugin in options.plugin) {
-          log.silly(`Adding plugin ${options.plugin[plugin]}`);
+          Logger.silly(`Adding plugin ${options.plugin[plugin]}`);
           ids.push(await pluginApi.addPlugin({'pluginPath': options.plugin[plugin]}));
         }
       }
@@ -281,9 +271,7 @@ export default class Load extends AbstractRemoteCommand {
   /**
    * @function module:cli.Load#handleSecrets
    * @description Check options and intake secrets
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   handleSecrets(options) {

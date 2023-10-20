@@ -1,18 +1,16 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
+import {CIXError, Logger} from '../../common/index.js';
 import AbstractRemoteCommand from './AbstractRemoteCommand.js';
-import {CIXError} from '../../common/index.js';
 import fs from 'fs';
-import log from 'winston';
 
 export default class Describe extends AbstractRemoteCommand {
   /**
    * @class
-   *
    * @description Describe Command.
    */
   constructor() {
@@ -22,9 +20,7 @@ export default class Describe extends AbstractRemoteCommand {
   /**
    * @function module:cli.Describe#registerOptions
    * @description Registers the command's options with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerOptions(program) {
@@ -39,9 +35,7 @@ export default class Describe extends AbstractRemoteCommand {
   /**
    * @function module:cli.Describe#registerDescription
    * @description Registers the command's description with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerDescription(program) {
@@ -51,7 +45,6 @@ export default class Describe extends AbstractRemoteCommand {
   /**
    * @function module:cli.Describe#writeSequenceToFile
    * @description Writes the step sequence as JSON to a file.
-   *
    * @param {object} path - A path the the file to save.
    * @param {object} sequence - The JSON content to write.
    */
@@ -62,9 +55,7 @@ export default class Describe extends AbstractRemoteCommand {
   /**
    * @function module:cli.Describe#action
    * @description Runs the Exec sub command.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   async action(options) {
@@ -93,7 +84,7 @@ export default class Describe extends AbstractRemoteCommand {
     } else if (options.stderr) {
       console.error(sequenceString);
     } else if (options.file) {
-      log.info(`Writing description to '${options.file}'`);
+      Logger.info(`Writing description to '${options.file}'`);
       try {
         this.writeSequenceToFile(options.file, sequenceString);
       } catch (error) {
@@ -106,7 +97,7 @@ export default class Describe extends AbstractRemoteCommand {
         throw error;
       }
     } else {
-      log.info(`Sequence: \n${sequenceString}`);
+      Logger.info(`Sequence: \n${sequenceString}`);
     }
   }
 }

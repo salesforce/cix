@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -87,6 +87,9 @@ describe('Step definition transformation', () => {
       Env: [
         'CIX_CONTAINER_NAME=testnetwork-test',
         'CIX_STEP_NAME=test',
+        'CIX_WORKDIR=/cix/src',
+        'CIX_WORKSPACE=/cix/src',
+        'CIX_TEMP=/cix/tmp',
       ],
       HostConfig: {
         Binds: [],
@@ -109,11 +112,10 @@ describe('Step definition transformation', () => {
     });
     expect(dockerContainer.config).toEqual({
       background: false,
-      continueOnFail: false,
       files: [
         {
           data: '#!/bin/sh\n\nPATH=/cix/bin:$PATH\n' +
-            'cix_echo() {\n' +
+            'cix_timestamp_echo() {\n' +
             '  cix_prev_status=$?\n' +
             '  if [ -x \"$(command -v date 2>/dev/null)\" ]; then\n' +
             '    echo \"+ [$(TZ=GMT+8 date +\"%Y-%m-%dT%H:%M:%S%z\")] $*\"\n' +
@@ -122,8 +124,13 @@ describe('Step definition transformation', () => {
             '  fi\n' +
             '  return $cix_prev_status\n' +
             '}\n' +
+            'cix_echo() {\n' +
+            '  cix_prev_status=$?\n' +
+            '  echo \"+ $*\"\n' +
+            '  return $cix_prev_status\n' +
+            '}\n' +
             'set -e\n\n' +
-            'cix_echo \'echo hello world\'\n' +
+            'cix_timestamp_echo \'echo hello world\'\n' +
             'echo hello world\n',
           mode: 0o755,
           name: 'usr/bin/cixrc',
@@ -151,6 +158,9 @@ describe('Step definition transformation', () => {
     expect(dockerContainer.containerSpec.Env).toEqual([
       'CIX_CONTAINER_NAME=testnetwork-test',
       'CIX_STEP_NAME=test',
+      'CIX_WORKDIR=/cix/src',
+      'CIX_WORKSPACE=/cix/src',
+      'CIX_TEMP=/cix/tmp',
       'SYSVAR=SYSVALUE',
       'VAR=VALUE',
     ]);
@@ -217,6 +227,44 @@ describe('Step definition transformation', () => {
     expect(dockerContainer.config.imageRepository).toEqual('path/image');
   });
 
+  test('fromStep() will parse image names with sha256 digest', () => {
+    const step = {
+      name: 'test',
+      image: 'path/image@sha256:1234',
+    };
+    dockerContainer.fromStep(step);
+    expect(dockerContainer.containerSpec.Image).toEqual('path/image@sha256:1234');
+  });
+
+
+  test('fromStep() will parse image names with tag', () => {
+    const step = {
+      name: 'test',
+      image: 'path/image:1234',
+    };
+    dockerContainer.fromStep(step);
+    expect(dockerContainer.containerSpec.Image).toEqual('path/image:1234');
+  });
+
+  test('fromStep() will parse image names with tag and sha256 digest', () => {
+    const step = {
+      name: 'test',
+      image: 'path/image:1234@sha256:1234',
+    };
+    dockerContainer.fromStep(step);
+    expect(dockerContainer.containerSpec.Image).toEqual('path/image:1234@sha256:1234');
+  });
+
+
+  test('fromStep() will parse image names with no tag as latest', () => {
+    const step = {
+      name: 'test',
+      image: 'path/image',
+    };
+    dockerContainer.fromStep(step);
+    expect(dockerContainer.containerSpec.Image).toEqual('path/image:latest');
+  });
+
   test('createContainerSpec() configures system and step volumes', () => {
     dockerContainer.volumes = [{name: 'stepvol', path: '/stepvol'}];
     const step = {
@@ -248,13 +296,67 @@ describe('Step definition transformation', () => {
     expect(newSpec.WorkingDir).toEqual('/cix/src');
   });
 
+  test('createContainerSpec() sets user when passed as string', () => {
+    const step = {
+      'name': 'step-name',
+      'user': '123',
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.User).toEqual('123');
+  });
+
+  test('createContainerSpec() sets user when passed as int', () => {
+    const step = {
+      'name': 'step-name',
+      'user': 123,
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.User).toEqual('123');
+  });
+
+  test('createContainerSpec() picks user from environment variable', () => {
+    dockerContainer.environment.addEnvironmentVariable({name: 'ug-id', value: '123:456'});
+    const step = {
+      'name': 'step-name',
+      'user': '$$ug-id',
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.User).toEqual('123:456');
+  });
+
+  test('createContainerSpec() skips setting user if starts with $$', () => {
+    const step = {
+      'name': 'step-name',
+      'user': '$$ug-id',
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.User).toEqual(undefined);
+  });
+
+  test('createContainerSpec() user is undefined by default', () => {
+    const step = {
+      'name': 'step-name',
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.User).toEqual(undefined);
+  });
+
+  test('createContainerSpec() user is undefined when user-id is empty', () => {
+    const step = {
+      'name': 'step-name',
+      'user': '',
+    };
+    const newSpec = dockerContainer.createContainerSpec(step);
+    expect(newSpec.User).toEqual(undefined);
+  });
+
   test('createContainerSpec() sets Privileged mode', () => {
     const step = {
       name: 'step-name',
       privileged: true,
     };
     const newSpec = dockerContainer.createContainerSpec(step);
-    expect(newSpec.Privileged).toEqual(true);
+    expect(newSpec.HostConfig.Privileged).toEqual(true);
   });
 
   test('createContainerSpec() configures unattached container', () => {
@@ -386,12 +488,6 @@ describe('Basic container operations (start, stop, remove)', () => {
     await expect(dockerContainer.start()).rejects.toThrow('failed with non-zero exit status');
   });
 
-  test('start() with continue-on-fail does not throw when the container fails', async () => {
-    mockContainer.wait = jest.fn().mockResolvedValue({StatusCode: 1});
-    dockerContainer.config.continueOnFail = true;
-    await expect(dockerContainer.start()).resolves.toEqual(1);
-  });
-
   test('stop() calls Dockerode stop', async () => {
     await expect(dockerContainer.stop()).resolves.toEqual(dockerContainer);
     expect(mockContainer.stop).toHaveBeenCalled();
@@ -413,7 +509,7 @@ describe('Pulling Images', () => {
     dockerContainer = new DockerContainer(dockerApi, 'testprefix', environment, 'testnetwork');
   });
 
-  test('pullImage() calls pullImageFromRegistry', () => {
+  test('pullImage() calls pullImageFromRegistry', async () => {
     dockerContainer.config = {
       authConfig: {
         username: 'user',
@@ -424,7 +520,7 @@ describe('Pulling Images', () => {
     };
     dockerContainer.pullImageFromRegistry = jest.fn();
 
-    expect(dockerContainer.pullImage()).resolves.toBeUndefined();
+    expect(await dockerContainer.pullImage()).toBeUndefined();
     expect(dockerContainer.pullImageFromRegistry).toHaveBeenCalledWith({
       authconfig: {
         password: 'pass',
@@ -435,7 +531,7 @@ describe('Pulling Images', () => {
     });
   });
 
-  test('pullImage() with Retry calls pullRetryDecorator', () => {
+  test('pullImage() with retry calls pullRetryDecorator', async () => {
     dockerContainer.config = {
       imageRepository: 'test',
       imageTag: 'latest',
@@ -447,7 +543,7 @@ describe('Pulling Images', () => {
     dockerContainer.pullImageFromRegistry = jest.fn();
     dockerContainer.pullRetryDecorator = jest.fn();
 
-    expect(dockerContainer.pullImage()).resolves.toBeUndefined();
+    expect(await dockerContainer.pullImage()).toBeUndefined();
     expect(dockerContainer.pullImageFromRegistry).not.toHaveBeenCalled();
     expect(dockerContainer.pullRetryDecorator).toHaveBeenCalledWith({
       fromImage: 'test',
@@ -455,35 +551,44 @@ describe('Pulling Images', () => {
     });
   });
 
-  test.skip('pullRetryDecorator()', () => {
+  test.skip('pullRetryDecorator()', async () => {
+    const imagePullSpec = {
+      'fromImage': 'does-not-exist',
+      'tag': 'latest',
+    };
+
     dockerContainer.config = {
-      pullRetryConfig: {
-        backoff: 1,
-        iterations: 2,
+      'authConfig': {
+        'username': 'test',
+        'password': 'test-pass',
+      },
+      'pullRetryConfig': {
+        'backoff': 0,
+        'iterations': 3,
       },
     };
-    let count = 1;
-    dockerContainer.pullImageFromRegistry = jest.fn().mockImplementation(() => {
-      console.log(`Retry test count is ${count}`);
-      if (count++ === 3) {
-        console.log('Retry test returning');
+
+    let count = 0;
+    dockerContainer.pullImageFromRegistry = jest.fn().mockImplementation((imagePullSpec) => {
+      count++;
+
+      expect(imagePullSpec.authconfig.username).toBe('test');
+      expect(imagePullSpec.authconfig.password).toBe('test-pass');
+
+      // dockerode currently strips credentials from imagePullSpec during a request
+      imagePullSpec.authconfig = undefined;
+
+      if (count === 3) {
         return;
       } else {
-        console.log('Retry test throwing');
         const e = new Error();
         e.statusCode = 500;
         throw e;
       }
     });
 
-    jest.useFakeTimers();
-    expect(dockerContainer.pullRetryDecorator()).resolves.toBeUndefined();
-    jest.runAllTimers();
+    await dockerContainer.pullRetryDecorator(imagePullSpec);
     expect(dockerContainer.pullImageFromRegistry).toHaveBeenCalledTimes(3);
-    // Is it only counting the non-Thrown calls? Maybe there's a way to count all regardless
-  });
-
-  test.skip('pullImageFromRegistry', () => {
   });
 });
 
@@ -510,5 +615,121 @@ describe('Copying files to the container', () => {
     expect(dockerContainer.putFiles(files)).resolves.toEqual(dockerContainer.container);
     // expect(dockerContainer.container.putArchive).toHaveBeenCalled();
     // OK we're not really testing anything here...
+  });
+
+  describe('createScript', () => {
+    test('should support the echo commands-output', () => {
+      const result = DockerContainer.createScript('test-echo', ['ls', 'pwd'], 'echo');
+      const expectedResult = {
+        data: '#!/bin/sh\n\nPATH=/cix/bin:$PATH\n' +
+          'cix_timestamp_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  if [ -x \"$(command -v date 2>/dev/null)\" ]; then\n' +
+          '    echo \"+ [$(TZ=GMT+8 date +\"%Y-%m-%dT%H:%M:%S%z\")] $*\"\n' +
+          '  else\n' +
+          '    echo \"+ $*\"\n' +
+          '  fi\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'cix_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  echo \"+ $*\"\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'set -e\n\n' +
+          'cix_echo \'ls\'\n' +
+          'ls\n\n' +
+          'cix_echo \'pwd\'\n' +
+          'pwd\n',
+        mode: 0o755,
+        name: 'usr/bin/cixrc',
+      };
+      expect(result).toEqual(expectedResult);
+    });
+
+    test('should support the minimal commands-output', () => {
+      const result = DockerContainer.createScript('test-minimal', ['ls', 'pwd'], 'minimal');
+      const expectedResult = {
+        data: '#!/bin/sh\n\nPATH=/cix/bin:$PATH\n' +
+          'cix_timestamp_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  if [ -x \"$(command -v date 2>/dev/null)\" ]; then\n' +
+          '    echo \"+ [$(TZ=GMT+8 date +\"%Y-%m-%dT%H:%M:%S%z\")] $*\"\n' +
+          '  else\n' +
+          '    echo \"+ $*\"\n' +
+          '  fi\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'cix_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  echo \"+ $*\"\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'set -e\n\n' +
+          'ls\n\n' +
+          'pwd\n',
+        mode: 0o755,
+        name: 'usr/bin/cixrc',
+      };
+      expect(result).toEqual(expectedResult);
+    });
+
+    test('should support the timestamp commands-output', () => {
+      const result = DockerContainer.createScript('test-timestamp', ['ls', 'pwd'], 'timestamp');
+      const expectedResult = {
+        data: '#!/bin/sh\n\nPATH=/cix/bin:$PATH\n' +
+          'cix_timestamp_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  if [ -x \"$(command -v date 2>/dev/null)\" ]; then\n' +
+          '    echo \"+ [$(TZ=GMT+8 date +\"%Y-%m-%dT%H:%M:%S%z\")] $*\"\n' +
+          '  else\n' +
+          '    echo \"+ $*\"\n' +
+          '  fi\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'cix_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  echo \"+ $*\"\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'set -e\n\n' +
+          'cix_timestamp_echo \'ls\'\n' +
+          'ls\n\n' +
+          'cix_timestamp_echo \'pwd\'\n' +
+          'pwd\n',
+        mode: 0o755,
+        name: 'usr/bin/cixrc',
+      };
+      expect(result).toEqual(expectedResult);
+    });
+
+    test('should default to the timestamp commands-output', () => {
+      const result = DockerContainer.createScript('test-default', ['ls', 'pwd']);
+      const expectedResult = {
+        data: '#!/bin/sh\n\nPATH=/cix/bin:$PATH\n' +
+          'cix_timestamp_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  if [ -x \"$(command -v date 2>/dev/null)\" ]; then\n' +
+          '    echo \"+ [$(TZ=GMT+8 date +\"%Y-%m-%dT%H:%M:%S%z\")] $*\"\n' +
+          '  else\n' +
+          '    echo \"+ $*\"\n' +
+          '  fi\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'cix_echo() {\n' +
+          '  cix_prev_status=$?\n' +
+          '  echo \"+ $*\"\n' +
+          '  return $cix_prev_status\n' +
+          '}\n' +
+          'set -e\n\n' +
+          'cix_timestamp_echo \'ls\'\n' +
+          'ls\n\n' +
+          'cix_timestamp_echo \'pwd\'\n' +
+          'pwd\n',
+        mode: 0o755,
+        name: 'usr/bin/cixrc',
+      };
+      expect(result).toEqual(expectedResult);
+    });
   });
 });

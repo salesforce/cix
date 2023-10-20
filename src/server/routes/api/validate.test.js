@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -8,7 +8,7 @@
 import Server from '../../Server.js';
 import request from 'supertest';
 
-describe('validate', async () => {
+describe('validate', () => {
   let server;
   const port = Math.floor(Math.random() * 64536) + 1000;
 
@@ -105,8 +105,8 @@ describe('validate', async () => {
       .send(pipeline);
 
     expect(response.statusCode).toBe(400);
-    expect(response.text).toContain('should have required property \'name\'');
-    expect(response.text).toContain('should have required property \'image\'');
+    expect(response.text).toContain('must have required property \'name\'');
+    expect(response.text).toContain('must have required property \'image\'');
   });
 
   test('succeeds when validating a valid plugin schema', async () => {
@@ -139,6 +139,6 @@ describe('validate', async () => {
       .send(plugin);
 
     expect(response.statusCode).toBe(400);
-    expect(response.text).toContain('should NOT have additional properties');
+    expect(response.text).toContain('must NOT have additional properties');
   });
 });

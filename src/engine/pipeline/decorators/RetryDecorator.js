@@ -1,11 +1,10 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {Provider, _} from '../../../common/index.js';
-import log from 'winston';
+import {Logger, Provider, _} from '../../../common/index.js';
 
 
 export default (payload, pipelineNode, promiseProvider) => {
@@ -22,8 +21,8 @@ export default (payload, pipelineNode, promiseProvider) => {
           await promiseProvider.get();
           break;
         } catch (error) {
-          log.warn(`Iteration ${i + 1}/${iterations} for ${payload.name} failed.`);
-          log.debug(`${error}`);
+          Logger.warn(`Iteration ${i + 1}/${iterations} for ${payload.name} failed.`, pipelineNode?.getPipeline?.().getId());
+          Logger.debug(`${error}`, pipelineNode?.getPipeline?.().getId());
           if ((i + 1) !== iterations) {
             await new Promise((resolve) => setTimeout(resolve, backoff * 1000));
           } else {

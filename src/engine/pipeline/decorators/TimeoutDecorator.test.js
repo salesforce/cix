@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -40,5 +40,18 @@ describe('TimeoutDecorator tests:', () => {
 
     const response = timeout(payload, undefined, promiseProvider).get();
     await expect(response).rejects.toEqual(new Error('Step NoName timed out after 1 seconds'));
+  });
+
+  test('Function provided terminates immediately if there is an exception.', async () => {
+    const payload = {'timeout': '1'}; // 1 second timeout
+    const timeoutFunc = () => {
+      return new Promise((resolve, reject) => setTimeout(() => {
+        reject(new Error('Broken promises!'));
+      }, 20)); // will resolve after 20 milliseconds
+    };
+    const promiseProvider = new Provider.fromFunction(timeoutFunc);
+
+    const response = timeout(payload, undefined, promiseProvider).get();
+    await expect(response).rejects.not.toEqual(new Error('Step NoName timed out after 1 seconds'));
   });
 });

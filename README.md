@@ -1,5 +1,4 @@
-CIX - CI Executor
-======
+# CIX - CI Executor
 
 **[Official Documentation](https://opensource.salesforce.com/cix/)** 👈 Check out our Doc Site
 

@@ -5,9 +5,15 @@ imports:
   library:
     src: ./library.yaml
   #
-  # Following is how http(s) based imports can be specified. The token is optional if needed, e.g.,
-  # needed in order to fetch from git.soma
+  # Following is how Git based http(s) imports can be specified. A personal access token is required
+  # with Git, there are two options 1) use the special HTTP_AUTHORIZATION_TOKEN secret 2) specifiy the 
+  # YAML attribute http-authorization-token and feed in any environment variable
   #
+  # (Option 1: HTTP_AUTHORIZATION_TOKEN secret)
+  # library: 
+  #   src: https://github.com/raw/ci/cix/master/docs/examples/import/library.yaml
+  #
+  # (Option 2: Use any other secret with YAML)
   # library:
   #   src: https://github.com/raw/ci/cix/master/docs/examples/import/library.yaml
   #   http_authorization_token: $$CIX_GIT_TOKEN # must be passed via -s

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -8,7 +8,7 @@
 import Server from '../../Server.js';
 import request from 'supertest';
 
-describe('environment', async () => {
+describe('environment', () => {
   let server;
   let pipelineId;
   const port = Math.floor(Math.random() * 64536) + 1000;
@@ -76,6 +76,6 @@ describe('environment', async () => {
   test('getting all environment variables works as expected', async () => {
     const response = await request(server.app).get(`/api/pipeline/${pipelineId}/environment`);
 
-    expect(response.text).toBe('[\"test\",\"CIX_HOSTNAME\",\"CIX_EXECUTION_ID\",\"test2\",\"test3\"]');
+    expect(response.text).toBe('[\"test\",\"CIX_HOSTNAME\",\"CIX_SERVER_PORT\",\"CIX_EXECUTION_ID\",\"test2\",\"test3\"]');
   });
 });

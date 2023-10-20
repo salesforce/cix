@@ -1,13 +1,12 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global jest, describe, beforeEach, expect */
 import ConfigImporter, {loadConfigFile} from './ConfigImporter.js';
-import {NodeProvider} from '../../common/index.js';
-import log from 'winston';
+import {Logger, NodeProvider} from '../../common/index.js';
 
 jest.autoMockOff();
 
@@ -140,7 +139,7 @@ describe('ConfigImporter.updateOptions', () => {
 
 describe('ConfigImporter.loadConfigFile', () => {
   test('invalid parsing should result in log warning', () => {
-    const warnMock = jest.spyOn(log, 'warn').mockImplementation();
+    const warnMock = jest.spyOn(Logger, 'warn').mockImplementation();
     const content = '{}{{}}}}}}';
     jest.spyOn(NodeProvider, 'getFs').mockImplementation(() => {
       return {readFileSync: () => content};

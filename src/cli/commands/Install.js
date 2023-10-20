@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -16,7 +16,6 @@ const {__dirname} = dirname;
 export default class Install extends AbstractCommand {
   /**
    * @class
-   *
    * @description Install Command.
    */
   constructor() {
@@ -26,9 +25,7 @@ export default class Install extends AbstractCommand {
   /**
    * @function module:cli.Install#registerOptions
    * @description Registers the command's options with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerOptions(program) {
@@ -39,9 +36,7 @@ export default class Install extends AbstractCommand {
   /**
    * @function module:cli.Install#registerDescription
    * @description Registers the command's description with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerDescription(program) {
@@ -51,7 +46,6 @@ export default class Install extends AbstractCommand {
   /**
    * @function module:cli.Describe#readScript
    * @description Reads the install script off the disk.
-   *
    * @returns {string} The contents of the install script.
    */
   readScript() {
@@ -61,9 +55,7 @@ export default class Install extends AbstractCommand {
   /**
    * @function module:cli.Install#action
    * @description Runs the install sub command.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   action(options) {
@@ -79,10 +71,10 @@ export default class Install extends AbstractCommand {
         '  echo "Installation failed, try again with \'sudo $0\'."',
         '  exit 1',
         'fi',
-        `chmod +x ${location}/cix`,
+        `chmod a+rx ${location}/cix`,
         `rm -f ${location}/cix2`,
         `ln -s cix ${location}/cix2`,
-        `echo 'Installed cix at ${location}/cix, start by cix -h.'`,
+        `echo 'Installed cix at ${location}/cix, start with cix -h.'`,
       ], '\n'));
   }
 }

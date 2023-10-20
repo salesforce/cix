@@ -20,6 +20,49 @@ function teardown() {
   assert_success
 }
 
+@test "CIX will exit non-zero on failed pipeline" {
+  mkdir -p tmp
+  cat << EOF > tmp/failed.yaml
+version: 2.1
+pipeline:
+  - step:
+      name: fail
+      image: alpine:3
+      commands:
+        - exit 1
+EOF
+  run $CIX_SCRIPT_WITH_TTY exec -y tmp/failed.yaml --remote
+  assert_failure
+  rm tmp/failed.yaml
+  rmdir tmp || true
+}
+
+@test "CIX will exit non-zero on chained failed pipeline" {
+  mkdir -p tmp
+  cat << EOF > tmp/success.yaml
+version: 2.1
+pipeline:
+  - step:
+      name: success
+      image: alpine:3
+      commands:
+        - exit 0
+EOF
+  cat << EOF > tmp/failed.yaml
+version: 2.1
+pipeline:
+  - step:
+      name: fail
+      image: alpine:3
+      commands:
+        - exit 1
+EOF
+  run $CIX_SCRIPT_WITH_TTY exec -y tmp/success.yaml -y tmp/failed.yaml --remote
+  assert_failure
+  rm tmp/failed.yaml tmp/success.yaml
+  rmdir tmp || true
+}
+
 @test "CIX able to load & continue basic.yaml" {
   run $CIX_SCRIPT_WITH_TTY load -y docs/examples/basic.yaml
   assert_success
@@ -75,19 +118,19 @@ version: 2.1
 pipeline:
   - step:
       name: first
-      image: alpine:3.9
+      image: alpine:3
       commands:
         - echo "Magic String 1"
         - sleep 5
   - step:
       name: second
-      image: alpine:3.9
+      image: alpine:3
       commands:
         - echo "Magic String 2"
         - sleep 5
   - step:
       name: third
-      image: alpine:3.9
+      image: alpine:3
       commands:
         - echo "Magic String 3"
         - sleep 5
@@ -116,14 +159,14 @@ EOF
 }
 
 
-@test "Can disable blocking behaviour" {
+@test "CIX can resume without blocking" {
   mkdir -p tmp
   cat << EOF > tmp/non-blocking.yaml
 version: 2.1
 pipeline:
   - step:
       name: first
-      image: alpine:3.9
+      image: alpine:3
       commands:
         - sleep 2
         - echo "Magic String 1"
@@ -150,12 +193,12 @@ version: 2.1
 pipeline:
   - step:
       name: first
-      image: alpine:3.9
+      image: alpine:3
       commands:
         - exit 1
   - step:
       name: second
-      image: alpine:3.9
+      image: alpine:3
       commands:
         - echo "Magic String 2"
         - sleep 5
@@ -203,4 +246,58 @@ EOF
   run $CIX_SCRIPT_WITH_TTY pipelines --status --pipeline-alias latest
   assert_success
   assert_output --partial 'Pipeline Status: "successful"'
+}
+
+@test "CIX will log remotely to files" {
+  mkdir -p tmp
+  cat << 'EOF' > tmp/files.yaml
+version: 2.1
+pipeline:
+  - step:
+      name: first
+      image: alpine:3.9
+      commands:
+        - echo "first"
+  - step:
+      name: second
+      image: alpine:3.9
+      commands:
+        - echo "second"
+EOF
+  run $CIX_SCRIPT_WITH_TTY exec -l files -p tmp -y tmp/files.yaml --remote
+  assert [ -e 'tmp/cix-execution.log' ]
+  first=(tmp/*first.log)
+  second=(tmp/*second.log)
+  assert [ -e "$first" ]
+  assert [ -e "$second" ]
+  rm tmp/*.log
+  rm tmp/files.yaml
+  rmdir tmp || true
+}
+
+@test "CIX will log remotely to single file" {
+  mkdir -p tmp
+  cat << 'EOF' > tmp/file.yaml
+version: 2.1
+pipeline:
+  - step:
+      name: first
+      image: alpine:3.9
+      commands:
+        - echo "first"
+  - step:
+      name: second
+      image: alpine:3.9
+      commands:
+        - echo "second"
+EOF
+  run $CIX_SCRIPT_WITH_TTY exec -l file -p tmp -y tmp/file.yaml --remote
+  assert [ -e 'tmp/cix-execution.log' ]
+  first=(tmp/*first.log)
+  second=(tmp/*second.log)
+  assert [ ! -e "$first" ]
+  assert [ ! -e "$second" ]
+  rm tmp/*.log
+  rm tmp/file.yaml
+  rmdir tmp || true
 }

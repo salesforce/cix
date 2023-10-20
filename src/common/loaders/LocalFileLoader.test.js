@@ -1,13 +1,15 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global beforeEach, describe, expect */
-import LocalFileLoader from './LocalFileLoader.js';
 import Path from 'path';
-import {ValidateError} from '../Errors.js';
+import {ValidateError} from '../index.js';
+// disable eslint for next line, some weird issue with jest loading order
+// eslint-disable-next-line sort-imports
+import LocalFileLoader from './LocalFileLoader.js';
 
 describe('LocalFileLoader.relativePath', () => {
   let loader;

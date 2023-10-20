@@ -1,4 +1,4 @@
-FROM node:12.20.1-alpine
+FROM node:16-alpine
 LABEL SCM_URL https://github.com/salesforce/cix
 USER root
 

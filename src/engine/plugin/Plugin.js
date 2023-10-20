@@ -1,12 +1,11 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {PluginError, _} from '../../common/index.js';
+import {Logger, PluginError, _} from '../../common/index.js';
 import ValidateService from '../ValidateService.js';
-import log from 'winston';
 import {v4 as uuidv4} from 'uuid';
 
 /**
@@ -20,7 +19,7 @@ export default class Plugin {
   constructor(pluginSpec) {
     // Create an ID
     this.id = uuidv4();
-    log.debug(`Generated ID for plugin: ${this.id}`);
+    Logger.debug(`Generated ID for plugin: ${this.id}`);
     if (pluginSpec && pluginSpec.pluginPath) {
       this.path = pluginSpec.pluginPath;
     } else {
@@ -43,9 +42,9 @@ export default class Plugin {
     if (!_.isEmpty(errors)) {
       _.forEach(errors, (error) => {
         if (error.message) {
-          log.warn(`Error validating plugin schema: ${error.message}: ${(error.params) ? JSON.stringify(error.params) : ''} at ${error.dataPath}`);
+          Logger.warn(`Error validating plugin schema: ${error.message}: ${(error.params) ? JSON.stringify(error.params) : ''} at ${error.dataPath}`);
         } else {
-          log.warn(`${JSON.stringify(error)}`);
+          Logger.warn(`${JSON.stringify(error)}`);
         }
       });
       throw new PluginError('Found errors loading and validating plugin.');
@@ -70,17 +69,17 @@ export default class Plugin {
    */
   async runPreprocessor(exec, pipelineDefinition) {
     if (this.preprocessor) {
-      log.info(`Running preprocessor ${this.preprocessor.image} for plugin ${this.getId()}`);
+      Logger.info(`Running preprocessor ${this.preprocessor.image} for plugin ${this.getId()}`);
       const result = await exec.runPreprocessor(this.preprocessor.image, pipelineDefinition);
 
       if (result.status == 0) {
         pipelineDefinition = result.output;
       } else {
-        log.error(`The preprocessor has returned a non-zero exit code (${result.status}):\n${result.output}`);
+        Logger.error(`The preprocessor has returned a non-zero exit code (${result.status}):\n${result.output}`);
         throw new PluginError(`The preprocessor has returned a non-zero exit code (${result.status}).`);
       }
     } else {
-      log.debug(`Skipping preprocessor for plugin ${this.getId()}.`);
+      Logger.debug(`Skipping preprocessor for plugin ${this.getId()}.`);
     }
     return pipelineDefinition;
   }

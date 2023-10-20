@@ -1,12 +1,11 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {NodeProvider, _} from '../../common/index.js';
+import {Logger, NodeProvider, _} from '../../common/index.js';
 import Path from 'path';
-import log from 'winston';
 import yaml from 'js-yaml';
 
 export default class ConfigImporter {
@@ -15,9 +14,7 @@ export default class ConfigImporter {
   /**
    * @function module:cli.config.ConfigImporter#load
    * @description Loads the content of one or all config files into memory.
-   *
    * @param {string} [path] - path to .cixconfig file
-   *
    * @returns {undefined}
    */
   load(path) {
@@ -34,7 +31,7 @@ export default class ConfigImporter {
       const pathToLoad = Path.resolve(`${Path.dirname(filename)}/${Path.basename(filename)}`);
       const loadedConfigs = loadConfigFile(pathToLoad);
       if (loadedConfigs) {
-        log.debug(`Successfully loaded CIX user configuration from ${pathToLoad}`);
+        Logger.debug(`Successfully loaded CIX user configuration from ${pathToLoad}`);
         configs = _.concat(configs, loadedConfigs);
       }
     });
@@ -45,9 +42,7 @@ export default class ConfigImporter {
   /**
    * @function module:cli.config.ConfigImporter#updateOptions
    * @description Modifies the options object to use imported configs where applicable.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   updateOptions(options) {
@@ -89,9 +84,7 @@ export default class ConfigImporter {
 /**
  * @function module:cli.config.ConfigImporter#loadConfigFile
  * @description Loads options from the given path.
- *
  * @param {object} path - location of config file to load
- *
  * @returns {object} representation of the loaded configurations
  */
 export function loadConfigFile(path) {
@@ -110,7 +103,7 @@ export function loadConfigFile(path) {
     try {
       return JSON.parse(file);
     } catch (err) {
-      log.warn(`Could not parse ${path} as either YAML or JSON, skipping.`);
+      Logger.warn(`Could not parse ${path} as either YAML or JSON, skipping.`);
     }
   }
 }

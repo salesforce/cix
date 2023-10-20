@@ -31,13 +31,20 @@ registry:
 imports:
   import-name:
     src: path-to-yaml-file
-    http_authorization_token: "optional-auth-token-on-http(s)-imports"
+    http-authorization-token: "optional-auth-token-on-http(s)-imports"
 
 pipeline:
   - step:
       name: string
       image: repo/string:tag
+      user: <name|uid>[:<group|gid>]
       pull-policy: Default | Always | IfNotPresent | Never
+      loop: Int
+      counter-variable: COUNTER
+      for-each: 
+        - list
+      for-each: c,s,v
+      element-variable: ELEMENT
       ports:
         - "port:port"
         - port
@@ -53,7 +60,7 @@ pipeline:
           value: string
           default: string
       when:
-        - operator: EQ | NEQ | IS_SET | IS_NOT_SET | GTE | GT | LTE | LT | EXISTS | NOT_EXISTS | OR | INCLUDES | NOT_INCLUDES | STARTS_WITH | ENDS_WITH
+        - operator: EQ | NEQ | IS_SET | IS_NOT_SET | GTE | GT | LTE | LT | EXISTS | NOT_EXISTS | OR | INCLUDES | NOT_INCLUDES | AND | STARTS_WITH | ENDS_WITH
           value: $$VALUE
           value-default: default-value
           other: $$OTHER
@@ -65,6 +72,10 @@ pipeline:
               default: something
           conditions: # When Operator is OR
             - operator: ...
+        - operator: MATCHES | NOT_MATCHES
+          value: $$VALUE
+          expressions: $$REGEXP
+          delimiter: ',' #delimiter is optional. By default ',' comma is taken as delimiter 
       arguments:
         - arg1
         - arg2
@@ -103,11 +114,12 @@ pipeline:
 
 ## Basic YAML Attributes
 
-### version {docsify-ignore}
+### version
 
 Number. Required.
 
-The CIX YAML file must specify a numeric version. Currently, that is `2.1` (as a number, the value should not be quoted).
+The CIX YAML file must specify a numeric version. Currently, that is `2.1` (as a number, the value should not be
+quoted).
 
 ```yaml
 version: 2.1
@@ -115,46 +127,57 @@ version: 2.1
 
 [Error loading section, please refresh](../shared/registry.md ':include')
 
-### pipeline {docsify-ignore}
+### pipeline
 
 Begins the pipeline definition, which is a collection of steps, [imports](#imports), and [step groups](#steps).
 
-### step {docsify-ignore}
+### step
 
 Defines a pipeline step - that is, a container. Supported attributes are described below, only `name` and `image`
 are required.
 
-#### arguments {docsify-ignore}
+#### arguments
 
 List of strings.
 
-A list of command arguments to pass to the image's default ENTRYPOINT executable. Mutually exclusive with the `commands`
-attribute.
+A list of command arguments to pass to the image's default ENTRYPOINT executable. Mutually exclusive with the
+`commands` attribute. As a special case, YAML boolean (`true`, `false`) and number (`123`, `3.14`) literals
+can be supplied without quotes, but be sure to quote other special YAML syntax that can be interpreted as
+structures or objects.
 
 ```yaml
 arguments:
   - --work-dir
   - /cix/src
+  - --timeout
+  - 120
+  - --enable-check
+  - true
+  - --data
+  - '{}'
   - start
 ```
 
-#### background {docsify-ignore}
+#### background
 
 Boolean, default `false`.
 
 When `true`, the step will be executed asynchronously from the remaining pipeline. Therefore, this can be used to
-start "services" which are required by subsequent steps.
+start "services" which are required by subsequent steps. The exit status of background steps is ignored, and a failure
+will not abort the pipeline.
 
 Containers terminate when there is no longer a process with PID 1, so if your process detaches from the standard file
-descriptors (stdin, stdout, and stderr) and starts a new process group ("daemonizes"), then you will need to otherwise
-prevent your container from exiting (such as a while loop which waits for the desired process to exit). If possible,
-your process should remain in the foreground.
+descriptors (stdin, stdout, and stderr) and starts a new process group (known as "daemonizing"), then you will need to
+otherwise prevent your container from exiting (such as a while loop which waits for the desired process to exit). If
+possible, your process should remain in the foreground.
 
-#### commands {docsify-ignore}
+#### commands
 
 A list of shell command strings to be executed after the container is started. These commands are added to a
 script which is injected into the container and replaces the container's default ENTRYPOINT. Mutually exclusive with
-the `arguments` attribute.
+the `arguments` attribute. As a special case, YAML boolean (`true`, `false`) and number (`123`, `3.14`) literals
+can be supplied without quotes, but be sure to quote other special YAML syntax that can be interpreted as
+structures or objects.
 
 ```yaml
 commands:
@@ -162,10 +185,10 @@ commands:
   - cp /src/file /tmp
 ```
 
-##### Tips & Caveats for `commands` {docsify-ignore}
+##### Tips & Caveats for `commands`
 
-The YAML "literal block scalar" operator is great for specifying multi-line expressions. It avoids having to escape special
-YAML characters or cram a complex shell statement into one long line with semicolons. It looks like this:
+The YAML "literal block scalar" operator is great for specifying multi-line expressions. It avoids having to escape
+special YAML characters or cram a complex shell statement into one long line with semicolons. It looks like this:
 
 ```
 commands:
@@ -190,7 +213,18 @@ if it is a strictly POSIX-conforming Bourne shell, you will be prevented from us
 An excellent reference to shell scripting can be found here:
 [Advanced Bash Scripting Guide](http://tldp.org/LDP/abs/html/index.html).
 
-#### commands-shell {docsify-ignore}
+#### commands-output
+
+String, default `timestamp`.
+
+Changes the default step output behavior, allowing users to simplify the output of their steps without wrapping them in
+a script. Allowed options are:
+* `timestamp` echoes the commands before their stdout/stderr is displayed, with a timestamp. This is the default
+behavior.
+* `echo` echoes the commands before their stdout/stderr is displayed, but does not provide a timestamp.
+* `minimal` steps will only convey the stdout/stderr of the commands run.
+
+#### commands-shell
 
 String, default `/bin/sh`.
 
@@ -201,7 +235,7 @@ some images may also provide a separate `/bin/bash`, or another language entirel
 commands-shell: /bin/bash
 ```
 
-#### continue-on-fail {docsify-ignore}
+#### continue-on-fail
 
 Boolean, default `false`.
 
@@ -214,7 +248,7 @@ last command's status will be used to determine the outcome of the step.
 
 [Error loading section, please refresh](../shared/environment.md ':include')
 
-#### hostname {docsify-ignore}
+#### hostname
 
 String.
 
@@ -223,7 +257,7 @@ simple word (“db” or “web”) to a fully-qualified hostname such as “www
 will resolve this name to the container's address for all other containers on the same network (that is, within
 the same pipeline).
 
-##### More On Container Names {docsify-ignore}
+##### More On Container Names
 
 A container can be referenced using several names. The first of course is the step name as defined by the `name:`
 attribute in the YAML file. This is the preferred name.
@@ -239,27 +273,65 @@ Docker will provide an internal DNS service for your containers. This enables it
 addresses. It's not advisable to manipulate the /etc/resolv.conf file, as this will remove the ability to refer to and
 connect with other containers by name.
 
-#### image {docsify-ignore}
+#### image
 
 String. Required.
 
 The name of the image for this step. If the image resides on an authenticated registry, you must specify the
 `registry` entry for the registry and provide authentication credentials.
 
-#### loop {docsify-ignore}
+#### loop
 
 Integer.
 
 Causes the step to be repeated the number of times specified.
 
-#### name {docsify-ignore}
+#### counter-variable
+
+String. Optional for `loop` or `for-each`.
+
+Exports a counter (starting at 1) as an environment variable to the current step iteration. 
+
+#### for-each
+
+YAML List or CSV.
+
+Causes the step to repeated for each element in the list or CSV.
+
+#### element-variable
+
+String. Required for `for-each`.
+
+Exports the element as an environment variable to the step iteration. 
+
+#### name
 
 String. Required.
 
 The container will be given this name as its hostname on the Docker network. Other containers can refer to it using
 this name. See the `hostname` attribute for more details on container hostnames.
 
-#### ports {docsify-ignore}
+#### user
+
+String or Integer. Optional.
+
+A string value specifying the user or integer value specifying user-id (uid) inside the container. The user field
+accepts a username or UID as well as optional group or GID (format: <name|uid>[:<group|gid>]).
+The user value can also be supplied via an environment variable with the `$$` notation.
+
+Default value of uid and gid is 0 (root)
+
+See the [Docker documentation](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user) on how
+to add usernames in images using Dockerfile
+
+```yaml
+pipeline:
+  - step:
+      name: example
+      user: '$$MY_USER'
+```
+
+#### ports
 
 List of ports to expose to the external host.
 
@@ -277,7 +349,7 @@ ports:
   - 9000
 ```
 
-#### privileged {docsify-ignore}
+#### privileged
 
 Boolean, default `false`.
 
@@ -288,7 +360,7 @@ See the [Docker documentation on the --privileged
 option](https://docs.docker.com/engine/reference/commandline/run/#full-container-capabilities---privileged) for more
 details.
 
-#### pull-policy {docsify-ignore}
+#### pull-policy
 
 String. Permissible values: `Default`, `Always`, `IfNotPresent`, `Never`
 
@@ -312,7 +384,7 @@ image: redis
 pull-policy: IfNotPresent
 ```
 
-#### retry {docsify-ignore}
+#### retry
 
 Must specify `iterations:` and `backoff:` values, which are both integers.
 
@@ -325,13 +397,13 @@ retry:
   backoff: 30
 ```
 
-#### timeout {docsify-ignore}
+#### timeout
 
 Integer, in seconds.
 
 Causes the step to fail if it takes longer than the specified number of seconds.
 
-#### volumes {docsify-ignore}
+#### volumes
 
 List of volumes to mount in the container.
 
@@ -343,13 +415,13 @@ volumes:
 
 [Error loading section, please refresh](../shared/conditionals.md ':include')
 
-#### working-dir {docsify-ignore}
+#### working-dir
 
 String, default `/cix/src`.
 
 Specifies an alternative current-working-directory when the container starts.
 
-#### workspace-mount-point {docsify-ignore}
+#### workspace-mount-point
 
 String, default `/cix/src`.
 
@@ -358,7 +430,7 @@ provided to `cix` with the `-w --workspace` option) will be mounted in the conta
 
 ## Advanced Topics
 
-### steps {docsify-ignore}
+### steps
 
 Begins a nested group of pipeline steps and imports.
 
@@ -374,26 +446,26 @@ pipeline:
             . . .
 ```
 
-#### name {docsify-ignore}
+#### name
 
 String. Required.
 
 Provides a name for the group of steps.
 
-#### parallel {docsify-ignore}
+#### parallel
 
 Boolean, default `false`.
 
 If set to `true`, the steps in the step group will be run concurrently.
 
-#### pipeline {docsify-ignore}
+#### pipeline
 
 Begins the declaration of sub-steps and step groups which will be grouped as a unit. Accepts all the
 attributes available to the top level `pipeline` directive.
 
 Step groups may contain nested groups.
 
-### imports {docsify-ignore}
+### imports
 
 Top-level directive which introduces an imported set of steps or entire pipeline for use later in the current file.
 
@@ -409,13 +481,13 @@ imports:
     src: another-file.yaml
   remote-import:
     src: http://my-awesome-remote-server/foo.yaml
-    http_authorization_token: my-awesome-optional-http-authorization-token
+    http-authorization-token: my-awesome-optional-http-authorization-token
 
 pipeline:
   . . .
 ```
 
-#### Using Imported Steps and Pipelines {docsify-ignore}
+#### Using Imported Steps and Pipelines
 
 Use imported steps and pipelines in your main YAML file, with `import:` followed by a list of the imported steps.
 Values are passed into the imported step(s) via environment variables.

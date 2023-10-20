@@ -325,9 +325,32 @@ pipeline:
       when:
         - operator: INCLUDES
           value: $$FOO_INCLUDES # example value FOO_INCLUDES=foo,bar,baz
+          value-default: foo,bar,baz
           other: foo
       commands:
         - echo "yay 14"
+  - step:
+      name: INCLUDESFail
+      image: alpine:3.9
+      when:
+        - operator: INCLUDES
+          value: $$FOO_INCLUDES # example value FOO_INCLUDES=foo,bar,baz
+          value-default: foo,bar,baz
+          other: ''
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: INCLUDESFail_2
+      image: alpine:3.9
+      when:
+        - operator: INCLUDES
+          value: $$FOO_INCLUDES # example value FOO_INCLUDES=foo,bar,baz
+          value-default: foo,bar,baz
+          other: ' '
+      commands:
+        - echo "shouldn't run"
+        - exit 1
   - step:
       name: NOT_INCLUDESPass
       image: alpine:3.9
@@ -376,6 +399,77 @@ pipeline:
           value: $$FOO_ENDS_WITH # example value FOO_ENDS_WITH=foobar
           value-default: foobar
           other: foo
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: ANDPass
+      image: alpine:3.9
+      when:
+        - operator: AND
+          conditions:
+          - operator: ENDS_WITH
+            value: $$FOO_ENDS_WITH # example value FOO_ENDS_WITH=foobar
+            value-default: foobar
+            other: bar
+          - operator: EQ
+            value: $$FOO_CONDITION_VALUE
+            value-default: 1
+            other: $$BAR_CONDITION_VALUE
+            other-default: 1
+      commands:
+        - echo "yay 18"
+  - step:
+      name: ANDFail_1
+      image: alpine:3.9
+      when:
+        - operator: AND
+          conditions:
+          - operator: ENDS_WITH
+            value: $$FOO_ENDS_WITH # example value FOO_ENDS_WITH=foobar
+            value-default: foobar
+            other: foo
+          - operator: EQ
+            value: $$FOO_CONDITION_VALUE
+            value-default: 1
+            other: $$BAR_CONDITION_VALUE
+            other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: ANDFail_2
+      image: alpine:3.9
+      when:
+        - operator: AND
+          conditions:
+          - operator: ENDS_WITH
+            value: $$FOO_ENDS_WITH # example value FOO_ENDS_WITH=foobar
+            value-default: foobar
+            other: bar
+          - operator: EQ
+            value: $$FOO_CONDITION_VALUE
+            value-default: 1
+            other: $$BAR_CONDITION_VALUE
+            other-default: 2
+      commands:
+        - echo "shouldn't run"
+        - exit 1
+  - step:
+      name: ANDFail_3
+      image: alpine:3.9
+      when:
+        - operator: AND
+          conditions:
+          - operator: ENDS_WITH
+            value: $$FOO_ENDS_WITH # example value FOO_ENDS_WITH=foobar
+            value-default: foobar
+            other: foo
+          - operator: EQ
+            value: $$FOO_CONDITION_VALUE
+            value-default: 2
+            other: $$BAR_CONDITION_VALUE
+            other-default: 2
       commands:
         - echo "shouldn't run"
         - exit 1

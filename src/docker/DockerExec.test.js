@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -7,6 +7,7 @@
 /* global jest, describe, test, expect, beforeEach  */
 import DockerContainer from './DockerContainer';
 import DockerExec from './DockerExec';
+import {NodeProvider} from '../common/index.js';
 // eslint-disable-next-line no-unused-vars
 import dockerode from 'dockerode';
 // eslint-disable-next-line no-unused-vars
@@ -18,12 +19,43 @@ jest.mock('dockerode');
 const environmentMock = {'addEnvironmentVariable': () => {}};
 const pipelineMock = {'getEnvironment': () => environmentMock, 'getShortId': () => 'abcd1234', 'getLogStream': () => {}};
 
+describe('DockerExec runStep()', () => {
+  let dockerExec;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    dockerExec = new DockerExec();
+  });
+
+  test('cannot be called if uninitialized', async () => {
+    await expect(dockerExec.runStep()).rejects.toThrow('DockerExec network has not been initialized');
+  });
+
+  test('runStep creates and starts a container', async () => {
+    dockerExec.networkName = 'test';
+    dockerExec.getEnvironment = () => [];
+    dockerExec.getVolumes = () => [];
+    dockerExec.getDefaultPullPolicy = () => 'Default';
+
+    expect(dockerExec.getTrackedContainers()).toHaveLength(0);
+
+    const step = await dockerExec.runStep({name: 'test-step', image: 'image:test'});
+
+    expect(DockerContainer.mock.instances[0].create).toHaveBeenCalled();
+    expect(DockerContainer.mock.instances[0].start).toHaveBeenCalled();
+    expect(dockerExec.getTrackedContainers()).toHaveLength(1);
+    expect(step).toHaveProperty('name', 'test-step');
+    expect(step).toHaveProperty('Finished.StatusCode');
+  });
+});
+
 describe('DockerExec init()', () => {
   const createNetworkResponse = {id: 'TEST'};
 
   let dockerExec; let dockerApi;
 
   beforeEach(() => {
+    process.exit = jest.fn(); // ensure tests never exit
     dockerExec = new DockerExec();
     jest.spyOn(dockerExec, 'installUtilities').mockImplementation(() => {});
     dockerApi = dockerExec.getDockerApi();
@@ -31,46 +63,50 @@ describe('DockerExec init()', () => {
     dockerApi.createVolume.mockReset();
   });
 
-  test('cannot be called twice', () => {
+  test('cannot be called twice', async () => {
     dockerExec.networkName = 'test';
-    return dockerExec.init(pipelineMock).catch((err) => expect(err.message).toMatch('has already been created'));
+    await dockerExec.init(pipelineMock).catch((err) => expect(err.message).toMatch('has already been created'));
   });
 
-  test('calls createVolume twice', () => {
+  test('calls createVolume twice', async () => {
     dockerApi.createNetwork.mockResolvedValueOnce(createNetworkResponse);
     dockerApi.createVolume.mockResolvedValue();
 
-    return dockerExec.init(pipelineMock).then(() => expect(dockerApi.createVolume.mock.calls.length).toBe(3));
+    await dockerExec.init(pipelineMock).then(() => expect(dockerApi.createVolume.mock.calls.length).toBe(3));
   });
 
-  test('calls createNetwork once', () => {
+  test('calls createNetwork once', async () => {
     dockerApi.createNetwork.mockResolvedValueOnce(createNetworkResponse);
     dockerApi.createVolume.mockResolvedValue();
 
-    return dockerExec.init(pipelineMock).then(() => expect(dockerApi.createNetwork.mock.calls.length).toBe(1));
+    await dockerExec.init(pipelineMock).then(() => expect(dockerApi.createNetwork.mock.calls.length).toBe(1));
   });
 
-  test('skips createVolume when createNetwork fails with appropriate error', () => {
+  test('skips createVolume when createNetwork fails with appropriate error', async () => {
     dockerApi.createNetwork.mockRejectedValueOnce();
     dockerApi.createVolume.mockResolvedValue();
 
-    return dockerExec.init(pipelineMock).catch((err) => {
+    await dockerExec.init(pipelineMock).catch((err) => {
       expect(dockerApi.createVolume).not.toHaveBeenCalled();
       expect(err.message).toMatch(/Failed to create the network/);
       expect(err.message).not.toMatch(/Failed to create the volume/);
     });
   });
 
-  test('fails when second createVolume fails with appropriate error', () => {
-    dockerApi.createNetwork.mockResolvedValueOnce(createNetworkResponse);
-    dockerApi.createVolume.mockResolvedValueOnce();
-    dockerApi.createVolume.mockRejectedValueOnce();
 
-    return dockerExec.init(pipelineMock).catch((err) => {
-      expect(dockerApi.createVolume.mock.calls.length).toBe(2);
-      expect(err.message).toMatch(/Failed to create the volume/);
-      expect(err.message).not.toMatch(/Failed to create the network/);
+  test('will skip network creation if one is provided', async () => {
+    const spy = jest.spyOn(NodeProvider, 'getProcess').mockImplementation(() => {
+      return {
+        env: {DOCKER_NETWORK: 'host'},
+      };
     });
+    dockerExec = new DockerExec();
+    spy.mockRestore();
+    jest.spyOn(dockerExec, 'installUtilities').mockImplementation(() => {});
+
+    dockerApi = dockerExec.getDockerApi();
+
+    await dockerExec.init(pipelineMock).then(() => expect(dockerApi.createNetwork.mock.calls.length).toBe(0));
   });
 });
 
@@ -85,7 +121,7 @@ describe('DockerExec installUtilities()', () => {
     dockerApi = dockerExec.getDockerApi();
   });
 
-  test('picks latest CIX image to run', () => {
+  test('picks latest CIX image to run', async () => {
     dockerApi.createNetwork.mockResolvedValueOnce(createNetworkResponse);
     dockerApi.createVolume.mockResolvedValue();
     dockerApi.listImages.mockResolvedValue([
@@ -94,17 +130,17 @@ describe('DockerExec installUtilities()', () => {
       {'Id': 3, 'Created': 1520482069, 'Labels': {'SCM_URL': 'https://github.com/salesforce/cix'}},
     ]);
 
-    return dockerExec.getLatestCixImage().then((image) => expect(image.Id).toBe(2));
+    await dockerExec.getLatestCixImage().then((image) => expect(image.Id).toBe(2));
   });
 
-  test('throws error when no CIX image found', () => {
+  test('throws error when no CIX image found', async () => {
     dockerApi.createNetwork.mockResolvedValueOnce(createNetworkResponse);
     dockerApi.createVolume.mockResolvedValue();
     dockerApi.listImages.mockResolvedValue([
       {'Id': 1, 'Created': 1549302571, 'Labels': {'SCM_URL': 'not-cix'}},
     ]);
 
-    return dockerExec.getLatestCixImage().catch((err) => expect(err.message).toMatch(/Unable to locate CIX image/));
+    await dockerExec.getLatestCixImage().catch((err) => expect(err.message).toMatch(/Unable to locate CIX image/));
   });
 
   test('installUtilities creates and starts a container', async () => {
@@ -120,37 +156,6 @@ describe('DockerExec installUtilities()', () => {
     expect(DockerContainer.mock.instances[0].create).toHaveBeenCalled();
     expect(DockerContainer.mock.instances[0].start).toHaveBeenCalled();
     expect(dockerExec.getTrackedContainers()).toHaveLength(1);
-  });
-});
-
-describe('DockerExec runStep()', () => {
-  let dockerExec;
-
-  beforeEach(() => {
-    jest.resetAllMocks();
-    dockerExec = new DockerExec();
-  });
-
-  test('cannot be called if uninitialized', async () => {
-    await expect(dockerExec.runStep()).rejects.toThrow('DockerExec has not been initialized');
-  });
-
-  test('runStep creates and starts a container', async () => {
-    dockerExec.networkName = 'test';
-    dockerExec.containerLogger = {createServerOutputStream: jest.fn()};
-    dockerExec.getEnvironment = () => [];
-    dockerExec.getVolumes = () => [];
-
-    expect(dockerExec.getTrackedContainers()).toHaveLength(0);
-
-    const step = await dockerExec.runStep({name: 'test-step', image: 'image:test'});
-
-    expect(DockerContainer.mock.instances[0].create).toHaveBeenCalled();
-    expect(DockerContainer.mock.instances[0].start).toHaveBeenCalled();
-    expect(dockerExec.getTrackedContainers()).toHaveLength(1);
-    expect(dockerExec.containerLogger.createServerOutputStream.mock.calls).toHaveLength(2);
-    expect(step).toHaveProperty('name', 'test-step');
-    expect(step).toHaveProperty('Finished.StatusCode');
   });
 });
 
@@ -194,52 +199,52 @@ describe('DockerExec tearDown()', () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    jest.useFakeTimers();
     dockerExec = new DockerExec();
     dockerApi = dockerExec.getDockerApi();
   });
 
-
-  test('tearDown() stops and removes a container', async () => {
+  test('tearDownContainers() stops and removes a container', async () => {
     const container1 = new DockerContainer();
     container1.stop = jest.fn().mockImplementation(() => container1);
-    dockerExec.getNetworkName = jest.fn().mockResolvedValue('test');
     dockerExec.getTrackedContainers = jest.fn().mockImplementation(() => [container1]);
 
-    expect(dockerExec.getTrackedContainers()).toHaveLength(1);
-    await dockerExec.tearDown();
+    dockerExec.tearDownContainers();
+    jest.advanceTimersByTime(15000);
+    await Promise.resolve();
     expect(DockerContainer.mock.instances[0].stop).toHaveBeenCalled();
     expect(DockerContainer.mock.instances[0].remove).toHaveBeenCalled();
   });
 
-  test('tearDown() removes a stopped container', async () => {
+  test('tearDownContainers() removes a stopped container', async () => {
     const container1 = new DockerContainer();
     container1.stop = jest.fn().mockImplementation(() => {
       throw new Error('container already stopped');
     });
-    dockerExec.getNetworkName = jest.fn().mockResolvedValue('test');
     dockerExec.getTrackedContainers = jest.fn().mockImplementation(() => [container1]);
 
-    expect(dockerExec.getTrackedContainers()).toHaveLength(1);
-    await dockerExec.tearDown();
+    dockerExec.tearDownContainers();
+    jest.advanceTimersByTime(15000);
+    await Promise.resolve();
     expect(DockerContainer.mock.instances[0].stop).toHaveBeenCalled();
     expect(DockerContainer.mock.instances[0].remove).toHaveBeenCalled();
   });
 
-  test('tearDown() doesn\'t remove a non-existent container', async () => {
+  test('tearDownContainers() doesn\'t remove a non-existent container', async () => {
     const container1 = new DockerContainer();
     container1.stop = jest.fn().mockImplementation(() => {
       throw new Error('no such container');
     });
-    dockerExec.getNetworkName = jest.fn().mockResolvedValue('test');
     dockerExec.getTrackedContainers = jest.fn().mockImplementation(() => [container1]);
 
-    expect(dockerExec.getTrackedContainers()).toHaveLength(1);
-    await dockerExec.tearDown();
+    dockerExec.tearDownContainers();
+    jest.advanceTimersByTime(15000);
+    await Promise.resolve();
     expect(DockerContainer.mock.instances[0].stop).toHaveBeenCalled();
     expect(DockerContainer.mock.instances[0].remove).not.toHaveBeenCalled();
   });
 
-  test('tearDown() removes the network', async () => {
+  test('tearDownNetwork() removes the network', async () => {
     dockerExec.getNetworkName = jest.fn().mockResolvedValue('test');
     const mockRemoveNetwork = jest.fn();
     dockerApi.getNetwork = jest.fn().mockImplementation(() => {
@@ -248,11 +253,31 @@ describe('DockerExec tearDown()', () => {
       };
     });
 
-    await dockerExec.tearDown();
+    await dockerExec.tearDownNetwork();
     expect(mockRemoveNetwork).toHaveBeenCalled();
   });
 
-  test('tearDown() removes a volume', async () => {
+  test('tearDownNetwork() skips teardown if DOCKER_HOSTNAME is set', async () => {
+    const spy = jest.spyOn(NodeProvider, 'getProcess').mockImplementation(() => {
+      return {
+        env: {DOCKER_NETWORK: 'host'},
+      };
+    });
+    dockerExec = new DockerExec();
+    spy.mockRestore();
+
+    const mockRemoveNetwork = jest.fn();
+    dockerApi.getNetwork = jest.fn().mockImplementation(() => {
+      return {
+        remove: mockRemoveNetwork,
+      };
+    });
+
+    await dockerExec.tearDownNetwork();
+    expect(mockRemoveNetwork).not.toHaveBeenCalled();
+  });
+
+  test('tearDownVolumes() removes a volume', async () => {
     dockerExec.getVolumes = jest.fn().mockImplementation(() => [{name: 'test'}]);
     const mockRemoveVolume = jest.fn();
     dockerApi.getVolume = jest.fn().mockImplementation(() => {
@@ -261,7 +286,9 @@ describe('DockerExec tearDown()', () => {
       };
     });
 
-    await dockerExec.tearDown();
+    dockerExec.tearDownVolumes();
+    jest.advanceTimersByTime(3000);
+    await Promise.resolve();
     expect(mockRemoveVolume).toHaveBeenCalled();
   });
 });

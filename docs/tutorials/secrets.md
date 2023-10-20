@@ -15,7 +15,7 @@ This method of passing secrets is convenient, but should only be used in select 
 [Error loading section, please refresh](../examples/secrets.yaml ':include :type=code')
 
   ```bash
-  cix exec -y docs/examples/secrets.yaml -s SECRET_FOO_FROM_COMMAND=foo -s SECRET_BAR_FROM_COMMAND=bar
+  cix exec -y docs/examples/secrets.yaml -s SECRET_FOO=foo -s SECRET_BAR=bar
   ```
 
 ### Secrets passed via stdin

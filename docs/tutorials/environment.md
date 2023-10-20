@@ -19,7 +19,7 @@ var='foo!' # single quotes must be used for certain special characters: https://
 # it is generally a good idea to surround the substitution with double quotes to ensure
 # the returned value is not interpreted directly by bash (and whitespace preserved),
 # but instead is passed as a string to CIX
-cix exec -y docs/examples/environment.yaml -e FOO_FROM_COMMAND="$(curl www.google.com)"
+cix exec -y docs/examples/environment.yaml -e FOO="$(curl www.google.com)"
 ```
 
 ## Examples
@@ -33,7 +33,7 @@ cix exec -y docs/examples/environment.yaml -e FOO_FROM_COMMAND="$(curl www.googl
 To launch this example, run the following command in your terminal:
 
 ```bash
-cix exec -y docs/examples/environment.yaml -e FOO_FROM_COMMAND=foo -e BAR_FROM_COMMAND=bar
+cix exec -y docs/examples/environment.yaml -e FOO=foo -e BAR=bar -e BAZ=baz
 ```
 
 ---

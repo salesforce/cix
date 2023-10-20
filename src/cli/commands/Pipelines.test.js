@@ -1,13 +1,12 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global beforeEach, describe, expect */
-import {CLIError} from '../../common/index.js';
+import {CLIError, Logger} from '../../common/index.js';
 import Pipelines from './Pipelines.js';
-import log from 'winston';
 
 describe('Pipelines.action', () => {
   let pipelines;
@@ -43,7 +42,7 @@ describe('Pipelines.action', () => {
   });
 
   test('getting --status without pipelineID will warn and get latest', async () => {
-    const logWarn = jest.spyOn(log, 'warn').mockImplementation(() => {});
+    const logWarn = jest.spyOn(Logger, 'warn').mockImplementation(() => {});
     jest.spyOn(pipelines, 'getPipelineApi').mockImplementation(() => {
       return {getPipelineForAlias: getPipelineForAlias, getPipelineStatus: getPipelineStatus};
     });
@@ -52,7 +51,7 @@ describe('Pipelines.action', () => {
   });
 
   test('getting --status with pipelineID will print status ', async () => {
-    const logInfo = jest.spyOn(log, 'info').mockImplementation(() => {});
+    const logInfo = jest.spyOn(Logger, 'info').mockImplementation(() => {});
     jest.spyOn(pipelines, 'getPipelineApi').mockImplementation(() => {
       return {getPipelineForAlias: getPipelineForAlias, getPipelineStatus: getPipelineStatus};
     });
@@ -80,7 +79,7 @@ describe('Pipelines.action', () => {
   });
 
   test('getting alias test', async () => {
-    const logInfo = jest.spyOn(log, 'info').mockImplementation(() => {});
+    const logInfo = jest.spyOn(Logger, 'info').mockImplementation(() => {});
     jest.spyOn(pipelines, 'getPipelineApi').mockImplementation(() => {
       return {getPipelineForAlias: getPipelineForAlias};
     });
@@ -90,7 +89,7 @@ describe('Pipelines.action', () => {
   });
 
   test('list pipelines with aliases', async () => {
-    const logInfo = jest.spyOn(log, 'info').mockImplementation(() => {});
+    const logInfo = jest.spyOn(Logger, 'info').mockImplementation(() => {});
     const getAliasesForPipeline = jest.fn().mockImplementation(() => {
       return {
         obj: ['latest', 'test'],

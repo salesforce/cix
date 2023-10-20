@@ -34,3 +34,8 @@ By default, the shell used by a step is `/bin/sh`. The behavior of `/bin/sh` is 
 More information on this YAML property is available [here](reference/yaml.md#continue-on-fail)
 
 In the [next section](tutorials/environment.md) we'll learn how environment variables work.
+
+### Run pipeline as non-root user
+
+By default commands inside a step are run as root user. This user can be overridden per step.
+More information on this is available [here](reference/yaml.md#user)

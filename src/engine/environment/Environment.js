@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -43,7 +43,6 @@ export default class Environment {
       return _.keys(_.omitBy(this.#environmentMap, (environmentVar) => environmentVar.type !== type));
     }
   }
-
   replace$$Values(input) {
     if (_.isNil(input)) {
       return '';

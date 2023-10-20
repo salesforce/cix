@@ -9,9 +9,9 @@ function setup() {
 }
 
 @test "CIX able to handle secrets from the command line" {
-  run $CIX_SCRIPT_WITH_TTY exec -y docs/examples/secrets.yaml -s SECRET_FOO_FROM_COMMAND=secret1 -s SECRET_BAR_FROM_COMMAND=secret2
+  run $CIX_SCRIPT_WITH_TTY exec -y docs/examples/secrets.yaml -s SECRET_FOO=secret1 -s SECRET_BAR=secret2
   assert_success
-  assert_output --partial 'Multiple secrets such as ********, ********, and ******** on the same line should be masked'
+  assert_output --partial 'Multiple secrets such as ********, ********, and ******** on the same line will be masked'
   refute_output --partial 'secret1'
   refute_output --partial 'secret2'
 }

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -8,8 +8,8 @@
  * @namespace JsonSchemas
  */
 
-export const masterSchema = {
-  '$id': 'master.json',
+export const mainSchema = {
+  '$id': 'main.json',
   'type': 'object',
   'properties': {
     'version': {
@@ -63,9 +63,14 @@ export const stepSchema = {
   'properties': {
     'name': {
       'type': ['string', 'number'],
+      'maxLength': 64,
+      'pattern': '^[a-zA-Z0-9][a-zA-Z0-9_.-]*$',
     },
     'image': {
       'type': 'string',
+    },
+    'user': {
+      'type': ['string', 'number'],
     },
     'pull-policy': {
       'type': 'string',
@@ -79,14 +84,17 @@ export const stepSchema = {
     'arguments': {
       'type': 'array',
       'items': {
-        'type': 'string',
+        'type': ['string', 'number', 'boolean'],
       },
     },
     'commands': {
       'type': 'array',
       'items': {
-        'type': 'string',
+        'type': ['string', 'number', 'boolean'],
       },
+    },
+    'commands-output': {
+      'type': 'string',
     },
     'commands-shell': {
       'type': 'string',
@@ -143,6 +151,18 @@ export const stepSchema = {
       'type': ['integer', 'string'],
       'minimum': 0,
     },
+    'counter-variable': {
+      'type': 'string',
+    },
+    'for-each': {
+      'type': ['string', 'array'],
+    },
+    'parallel': {
+      'type': 'boolean',
+    },
+    'element-variable': {
+      'type': 'string',
+    },
     'when': {
       'type': 'array',
       'items': {
@@ -182,13 +202,13 @@ export const environmentSchema = {
       'type': 'string',
     },
     'value': {
-      'type': ['string', 'number'],
+      'type': ['string', 'number', 'boolean'],
     },
     'default': {
-      'type': ['string', 'number'],
+      'type': ['string', 'number', 'boolean'],
     },
   },
-  'required': ['name', 'value'],
+  'required': ['name'],
 };
 
 export const importSchema = {
@@ -259,6 +279,12 @@ export const whenSchema = {
       'type': ['string', 'number', 'boolean'],
     },
     'other': {
+      'type': ['string', 'number', 'boolean'],
+    },
+    'expressions': {
+      'type': ['string', 'number', 'boolean'],
+    },
+    'delimiter': {
       'type': ['string', 'number', 'boolean'],
     },
     'other-default': {

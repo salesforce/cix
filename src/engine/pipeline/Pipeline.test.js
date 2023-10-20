@@ -1,15 +1,14 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* eslint-disable key-spacing */
 /* global  describe, expect */
-import {ExecutionError, NodeProvider, ValidateError, _} from '../../common/index.js';
+import {ExecutionError, Logger, NodeProvider, ValidateError, _} from '../../common/index.js';
 import Pipeline from './Pipeline.js';
 import Step from './Step.js';
-import log from 'winston';
 
 const mockInit = jest.fn().mockResolvedValue();
 const mockRunStep = jest.fn().mockResolvedValue();
@@ -219,21 +218,28 @@ describe('Pipeline tests:', () => {
     expect(mockTeardown.mock.calls.length).toBe(1);
   });
 
-  test('Pipeline: generate a logStream.', async () => {
-    basicPipeline.generateLogStream();
-    expect(basicPipeline.getLogStream()).not.toBeNull();
-    await basicPipeline.start();
+  test('Pipeline: can get status of chained pipelines on failure.', async () => {
+    basicPipeline.setNextPipeline(nestedPipeline);
+    basicPipeline.setStatus(Pipeline.STATUS.successful);
+    nestedPipeline.setStatus(Pipeline.STATUS.failed);
+    expect(basicPipeline.getStatus()).toBe(Pipeline.STATUS.successful);
+    expect(basicPipeline.getStatus(true)).toBe(Pipeline.STATUS.failed);
   });
 
-  test('Pipeline: don\'t generate a log stream by default.', async () => {
-    await basicPipeline.start();
-    expect(basicPipeline.getLogStream()).toBeNull();
+  test('Pipeline: can get status of chained pipelines on success.', async () => {
+    basicPipeline.setNextPipeline(nestedPipeline);
+    basicPipeline.setStatus(Pipeline.STATUS.successful);
+    nestedPipeline.setStatus(Pipeline.STATUS.successful);
+    expect(basicPipeline.getStatus()).toBe(Pipeline.STATUS.successful);
+    expect(basicPipeline.getStatus(true)).toBe(Pipeline.STATUS.successful);
   });
 
-  test('Pipeline: destroy will set logStream to null.', async () => {
-    basicPipeline.generateLogStream();
-    basicPipeline.destroyLogStream();
-    expect(basicPipeline.getLogStream()).toBeNull();
+  test('Pipeline: can get status of chained pipelines while in progress.', async () => {
+    basicPipeline.setNextPipeline(nestedPipeline);
+    basicPipeline.setStatus(Pipeline.STATUS.successful);
+    nestedPipeline.setStatus(Pipeline.STATUS.running);
+    expect(basicPipeline.getStatus()).toBe(Pipeline.STATUS.successful);
+    expect(basicPipeline.getStatus(true)).toBe(Pipeline.STATUS.running);
   });
 
   test('Pipeline: setStatus throws on unrecognized status.', () => {
@@ -430,7 +436,7 @@ describe('Pipeline tests:', () => {
         throw new Error();
       }};
     });
-    const warnMock = jest.spyOn(log, 'warn').mockImplementation();
+    const warnMock = jest.spyOn(Logger, 'warn').mockImplementation();
     basicPipeline.resolveWorkspace('test');
 
     expect(warnMock.mock.calls[0][0]).toMatch(/Workspace is not writable/);

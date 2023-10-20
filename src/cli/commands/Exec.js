@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -9,7 +9,6 @@ import Load from './Load.js';
 export default class Exec extends Load {
   /**
    * @class
-   *
    * @description Exec command.
    */
   constructor() {
@@ -19,24 +18,21 @@ export default class Exec extends Load {
   /**
    * @function module:cli.Exec#registerOptions
    * @description Registers the command's options with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerOptions(program) {
     program = super.registerOptions(program);
     program.option('--remote', 'CIX will execute against a remote CIX Server.');
     program.option('--non-blocking', 'Disables the blocking wait until a remote execution is complete.');
-    return program.option('--no-remote-logs', 'Disables streaming logs from Server.', false);
+    // options starting with --no are inverted by commander, thus the default here is really false
+    return program.option('--no-remote-logs', 'Disables streaming logs from Server.', true);
   }
 
   /**
    * @function module:cli.Exec#registerDescription
    * @description Registers the command's description with Commander.
-   *
    * @param {object} program - A reference to the Commander program.
-   *
    * @returns {object} The reference to the Commander program (used in builder pattern).
    */
   registerDescription(program) {
@@ -46,9 +42,7 @@ export default class Exec extends Load {
   /**
    * @function module:cli.Install#action
    * @description Runs the Exec sub command.
-   *
    * @param {object} options - map of options set on command line
-   *
    * @returns {undefined}
    */
   async action(options) {
@@ -77,10 +71,11 @@ export default class Exec extends Load {
         await pipelineApi.startPipeline(postBody);
       }
       if (postBody['blocking']) {
-        await this.checkStatusPostRun(pipelineId);
+        await this.checkStatusPostRun(pipelineId, true);
       }
     } else {
       await this.getPipelineService().startPipeline(pipelineId);
+      await this.checkStatusPostRun(pipelineId, false);
     }
   }
 }

@@ -1,10 +1,10 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {ExecutionError, NodeProvider, ValidateError, _} from '../../common/index.js';
+import {ExecutionError, Logger, NodeProvider, ValidateError, _} from '../../common/index.js';
 import Environment from '../environment/Environment.js';
 import ExecFactory from '../runtime/ExecFactory.js';
 import PipelineImporter from './PipelineImporter.js';
@@ -13,10 +13,7 @@ import Step from './Step.js';
 import Steps from './Steps.js';
 import ValidateService from '../ValidateService.js';
 import events from 'events';
-import log from 'winston';
-import os from 'os';
 import path from 'path';
-import stream from 'stream';
 import {v4 as uuidv4} from 'uuid';
 
 // Static constant for Pipeline Class, so that you can use Pipeline.STATUS.ready
@@ -51,11 +48,23 @@ export default class Pipeline {
     if (_.isNil(pipelineSpec)) {
       throw new ValidateError('Must pass in a new Pipeline object.', 400);
     }
+
+    // Create an ID
+    this.id = uuidv4();
+    // get a logger
+    Logger.createPipelineLogger(this);
+    Logger.debug(`Generated ID for pipeline: ${this.getId()}`, this.getId());
+
+
     this.nextPipeline = null;
     this.status = Pipeline.STATUS.ready;
 
     // Seed our environment object
     this.environment = new Environment(pipelineSpec.environment);
+    this.environment.addEnvironmentVariable({name: 'CIX_EXECUTION_ID', value: this.getId(), type: 'internal'});
+
+    // Set default pull policy
+    this.defaultPullPolicy = pipelineSpec.defaultPullPolicy;
 
     // Attach plugins
     this.plugins = [];
@@ -79,14 +88,14 @@ export default class Pipeline {
     // Configure workspace
     this.workspacePath = this.resolveWorkspace(pipelineSpec.workspace);
 
-    // Create an ID
-    this.id = uuidv4();
-    log.debug(`Generated ID for pipeline: ${this.id}`);
-    this.environment.addEnvironmentVariable({name: 'CIX_EXECUTION_ID', value: this.id, type: 'internal'});
-
     // Set Hostname
     if (!this.environment.getEnvironmentVariable('CIX_HOSTNAME')) {
-      this.environment.addEnvironmentVariable({name: 'CIX_HOSTNAME', value: os.hostname(), type: 'internal'});
+      this.environment.addEnvironmentVariable({name: 'CIX_HOSTNAME', value: 'localhost', type: 'internal'});
+    }
+
+    // Set Port
+    if (!this.environment.getEnvironmentVariable('CIX_SERVER_PORT')) {
+      this.environment.addEnvironmentVariable({name: 'CIX_SERVER_PORT', value: '10030', type: 'internal'});
     }
 
     // set Type
@@ -105,17 +114,16 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#resolveWorkspace
    * @description Creates a new Pipeline.
-   *
    * @param {string} workspace - path of the workspace.
    * @returns {string} fully qualified
    */
   resolveWorkspace(workspace) {
     if (workspace) {
       workspace = path.resolve(workspace);
-      log.debug(`Workspace supplied: ${workspace}`);
+      Logger.debug(`Workspace supplied: ${workspace}`, this.getId());
     } else {
       workspace = NodeProvider.getProcess().cwd();
-      log.debug(`Workspace not supplied. Using current working directory: ${workspace}`);
+      Logger.debug(`Workspace not supplied. Using current working directory: ${workspace}`, this.getId());
     }
 
     const fs = NodeProvider.getFs();
@@ -126,8 +134,8 @@ export default class Pipeline {
     try {
       fs.accessSync(workspace, fs.constants.W_OK);
     } catch (error) {
-      log.debug(`${error}`);
-      log.warn(`Workspace is not writable: ${workspace}`);
+      Logger.debug(`${error}`, this.getId());
+      Logger.warn(`Workspace is not writable: ${workspace}`, this.getId());
     }
 
     return workspace;
@@ -136,7 +144,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#STATUS
    * @description Status static constant.
-   *
    * @returns {object} A dictionary of statuses.
    */
   static get STATUS() {
@@ -146,7 +153,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#isActive
    * @description Indicates if a pipeline is in a state that may need cleanup.
-   *
    * @returns {boolean} The boolean stating if it is active or not.
    */
   isActive() {
@@ -161,7 +167,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#isTerminal
    * @description Indicates if a pipeline has finished running.
-   *
    * @returns {boolean} The boolean stating if it is finished or not.
    */
   isTerminal() {
@@ -176,7 +181,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#isStartable
    * @description Indicates if a pipeline can be started.
-   *
    * @returns {boolean} The boolean stating if pipeline can be started.
    */
   isStartable() {
@@ -188,79 +192,8 @@ export default class Pipeline {
   }
 
   /**
-   * @function module:engine.Pipeline#generateLogStream
-   * @description Generates a log stream for remote client requests.
-   *
-   * @returns {stream} The log stream.
-   */
-  generateLogStream() {
-    // Cleanup after any old log streams...
-    this.destroyLogStream();
-
-    // transform the docker and winston object streams into a string stream, also deals with back pressure
-    this.logStream = new stream.Transform({
-      writableObjectMode: true,
-      transform(chunk, _encoding, callback) {
-        chunk.message = chunk.message.toString('utf8');
-        // prevent any back pressure, if the readable buffer goes over the max -16K for warnings, it starts skipping messages.
-        if (this.readableLength < this.readableHighWaterMark) {
-          this.push(JSON.stringify(chunk) + '\n');
-        } else {
-          // send a warning if we still have room to do so.
-          if (!this.warningSent) {
-            this.push(JSON.stringify({'level': 'warn', 'message': 'Not able to keep up with server log streaming, having to drop packets....'}));
-            this.warningSent = true;
-            // wait 1000 milliseconds before allowing this to be sent again...
-            setTimeout(() => {
-              this.warningSent = false;
-            }, 1000);
-          }
-        }
-        callback();
-      },
-    });
-    // hook into the global winston CIX log stream, track it so we can remove it later
-    // Note: this means if we're running more than one pipeline concurrently, you'll get logs from both
-    this.winstonStream = new log.transports.Stream({
-      stream: this.logStream,
-    });
-    log.add(this.winstonStream);
-    return this.logStream;
-  }
-
-  /**
-   * @function module:engine.Pipeline#generateLogStream
-   * @description Returns a reference to the pipelines log stream.
-   *
-   * @returns {stream} The log stream.
-   */
-  getLogStream() {
-    if (this.logStream) {
-      return this.logStream;
-    } else {
-      return null;
-    }
-  }
-
-  /**
-   * @function module:engine.Pipeline#generateLogStream
-   * @description Destroys the log stream if one exists
-   */
-  destroyLogStream() {
-    if (!_.isNil(this.winstonStream)) {
-      log.remove(this.winstonStream);
-      this.winstonStream = null;
-    }
-    if (!_.isNil(this.logStream)) {
-      this.logStream.destroy();
-      this.logStream = null;
-    }
-  }
-
-  /**
    * @function module:engine.Pipeline#getLength
    * @description Returns the number of individual steps in the pipeline.
-   *
    * @returns {number} The number of steps in the pipeline.
    */
   getLength() {
@@ -270,7 +203,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getStepList
    * @description Returns a list of steps that can be iterated through.
-   *
    * @returns {Array} The list of Step references.
    */
   getStepList() {
@@ -280,7 +212,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getStepsList
    * @description Returns a list of step groups that can be iterated through
-   *
    * @returns {Array} The list of Steps references.
    */
   getStepsList() {
@@ -290,7 +221,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getRemainingSteps
    * @description Returns a list of steps that have not yet run.
-   *
    * @returns {Array} The list of Step references.
    */
   getRemainingSteps() {
@@ -300,7 +230,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getPipelineNodeList
    * @description Returns a list of step groups and steps that can be iterated through
-   *
    * @returns {Array}  The list of PipelineNode references.
    */
   getPipelineNodeList() {
@@ -310,7 +239,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getPlugins
    * @description Returns a list of plugins enabled on this pipeline.
-   *
    * @returns {Array}  The list of plugins for this pipeline.
    */
   getPlugins() {
@@ -320,7 +248,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getErrors
    * @description Returns the errors associated with this pipeline's individual steps.
-   *
    * @returns {Array} An array of strings representing any errors found in the payload.
    */
   getErrors() {
@@ -330,7 +257,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getEnvironment
    * @description Returns a reference to the environment object.
-   *
    * @returns {object} A reference to the environment object.
    */
   getEnvironment() {
@@ -340,7 +266,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#awaitStatusChange
    * @description Allows the caller to wait for a pipeline status change.
-   *
    * @param {Array} statuses - (optional) status to be notified on.
    * @returns {Promise} A promise which will resolve once status is set.
    */
@@ -359,27 +284,43 @@ export default class Pipeline {
   }
 
   /**
+   * @function module:engine.Pipeline#getLoggingFormat
+   * @description Returns the logging format for this pipeline.
+   * @returns {string} The logging format for this pipeline.
+   */
+  getLoggingFormat() {
+    return PluginService.getLoggingFormat();
+  }
+
+  /**
    * @function module:engine.Pipeline#getStatus
    * @description Returns the status of the pipeline.
-   *
+   * @param {boolean} chainedStatus  - Returns the status of chained pipelines (default: false).
    * @returns {string} The status of the pipeline.
    */
-  getStatus() {
-    return this.status;
+  getStatus(chainedStatus = false) {
+    let status = this.status;
+    if (chainedStatus) {
+      let nextPipeline = this.getNextPipeline();
+      while (!_.isNil(nextPipeline) && status == 'successful') {
+        status = nextPipeline.status;
+        nextPipeline = nextPipeline.getNextPipeline();
+      }
+    }
+    return status;
   }
 
 
   /**
    * @function module:engine.Pipeline#setStatus
    * @description Sets the status of the pipeline.
-   *
    * @param {string} status - The status of the pipeline.
    */
   setStatus(status) {
     if (!_.includes(_.keys(Pipeline.STATUS), status)) {
       throw new ExecutionError(`'${status}' is not a valid status for a pipeline.`);
     }
-    log.silly(`Changing ${this.getId()} status to '${status}'.`);
+    Logger.silly(`Changing ${this.getId()} status to '${status}'.`, this.getId());
     if (this.status != status) {
       this.status = status;
       this.statusEmitter.emit('status', status);
@@ -389,11 +330,10 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#setNextPipeline
    * @description Sets the next pipeline to call after this one completes.
-   *
    * @param {object} nextPipeline - A reference to the next pipeline.
    */
   setNextPipeline(nextPipeline) {
-    log.debug(`Linking pipeline ${this.getId()} -> ${nextPipeline.getShortId()}`);
+    Logger.debug(`Linking pipeline ${this.getId()} -> ${nextPipeline.getShortId()}`, this.getId());
     this.nextPipeline = nextPipeline;
   }
 
@@ -401,7 +341,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getNextPipeline
    * @description Gets the next pipeline to call after this one completes.
-   *
    * @returns {object} A reference to the next pipeline.
    */
   getNextPipeline() {
@@ -411,7 +350,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getType
    * @description Returns the type of the pipeline.
-   *
    * @returns {string} The type of pipeline.
    */
   getType() {
@@ -421,7 +359,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#setType
    * @description Sets the type of the pipeline.
-   *
    * @param {string} type - The type of pipeline.
    */
   setType(type) {
@@ -431,7 +368,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getExec
    * @description Gets the execution runtime.
-   *
    * @returns {object} The execution runtime.
    */
   getExec() {
@@ -441,7 +377,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getWorkspacePath
    * @description Gets the workspace path for the pipeline.
-   *
    * @returns {string} A string representation of the workspace path.
    */
   getWorkspacePath() {
@@ -451,7 +386,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getRegistries
    * @description Gets the registry information defined for the pipeline.
-   *
    * @returns {object} An object representation of the registries.
    */
   getRegistries() {
@@ -461,7 +395,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getId
    * @description Gets the ID of the pipeline.
-   *
    * @returns {string} An ID.
    */
   getId() {
@@ -471,7 +404,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getShortId
    * @description Gets a shortened ID of the pipeline.
-   *
    * @returns {string} An truncated 5 character ID.
    */
   getShortId() {
@@ -481,7 +413,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getBreakpoint
    * @description Gets the current breakpoint or null if one is not set.
-   *
    * @returns {string} name of the breakpoint
    */
   getBreakpoint() {
@@ -491,11 +422,10 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#setBreakpoint
    * @description Sets a step breakpoint to pause on.
-   *
    * @param {string} breakpoint - the step which to pause on.
    */
   setBreakpoint(breakpoint) {
-    log.debug(`Setting a step breakpoint on ${this.getShortId()} to ${breakpoint}.`);
+    Logger.debug(`Setting a step breakpoint on ${this.getShortId()} to ${breakpoint}.`, this.getId());
     this.breakpoint = `${breakpoint}`;
   }
 
@@ -504,7 +434,7 @@ export default class Pipeline {
    * @description Clears the breakpoint.
    */
   clearBreakpoint() {
-    log.silly('Clearing breakpoint.');
+    Logger.silly('Clearing breakpoint.', this.getId());
     this.breakpoint = null;
   }
 
@@ -512,7 +442,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#getPipelineTreeRoot
    * @description returns the root Steps node of the pipeline tree.
-   *
    * @returns {Steps} - the root Steps object.
    */
   getPipelineTreeRoot() {
@@ -528,7 +457,6 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#describeSequence
    * @description Returns a object/json representation of the step sequence.
-   *
    * @returns {object} The sequence.
    */
   async describeSequence() {
@@ -571,31 +499,15 @@ export default class Pipeline {
    */
   async loadAndValidate() {
     if (this.getStatus() === Pipeline.STATUS.ready) {
-      log.debug(`Loading pipeline ${this.getShortId()}.`);
+      Logger.debug(`Loading pipeline ${this.getShortId()}.`, this.getId());
       let importer;
 
-      if (!_.isEmpty(this.getPlugins())) {
-        log.debug('Plugins installed, running all preprocessors.');
-        let pipelineDefinition;
-        if (this.yamlPath) {
-          pipelineDefinition = await _.fetch(this.yamlPath);
-        } else {
-          pipelineDefinition = this.rawPipeline;
-        }
-        pipelineDefinition = pipelineDefinition.toString();
-        for (const plugin of this.getPlugins()) {
-          log.silly(`Pipeline definition before preprocessor ${plugin.getId()}:\n${pipelineDefinition}`);
-          pipelineDefinition = await plugin.runPreprocessor(this.getExec(), pipelineDefinition);
-          log.silly(`Pipeline definition after preprocessor ${plugin.getId()}:\n${pipelineDefinition}`);
-        }
-        pipelineDefinition = _.loadYamlOrJson(pipelineDefinition);
-        importer = new PipelineImporter({rawPipeline: pipelineDefinition, environment: this.environment});
-      } else if (this.yamlPath) {
-        log.debug(`Creating Pipeline with yaml: ${this.yamlPath}`);
-        importer = new PipelineImporter({path: this.yamlPath, environment: this.environment});
+      if (this.yamlPath) {
+        Logger.debug(`Creating Pipeline with yaml: ${this.yamlPath}`, this.getId());
+        importer = new PipelineImporter({path: this.yamlPath, pipeline: this});
       } else {
-        log.debug(`Creating Pipeline with JSON input: ${JSON.stringify(this.rawPipeline)}`);
-        importer = new PipelineImporter({rawPipeline: this.rawPipeline, environment: this.environment});
+        Logger.debug(`Creating Pipeline with JSON input: ${JSON.stringify(this.rawPipeline)}`, this.getId());
+        importer = new PipelineImporter({rawPipeline: this.rawPipeline, pipeline: this});
       }
 
       // load the pipeline
@@ -608,9 +520,9 @@ export default class Pipeline {
       if (!_.isEmpty(errors)) {
         _.forEach(errors, (error) => {
           if (error.message) {
-            log.warn(`Error validating pipeline schema: ${error.message}: ${(error.params) ? JSON.stringify(error.params) : ''} at ${error.dataPath}`);
+            Logger.warn(`Error validating pipeline schema: ${error.message}: ${(error.params) ? JSON.stringify(error.params) : ''} at ${error.dataPath}`, this.getId());
           } else {
-            log.warn(`${JSON.stringify(error)}`);
+            Logger.warn(`${typeof error === 'string' ? error : JSON.stringify(error)}`, this.getId());
           }
         });
         this.setStatus(Pipeline.STATUS.failed);
@@ -618,34 +530,34 @@ export default class Pipeline {
       }
       this.setStatus(STATUS.loaded);
     } else {
-      log.silly(`Pipeline ${this.getShortId()} was previously loaded, using that.`);
+      Logger.silly(`Pipeline ${this.getShortId()} was previously loaded, using that.`, this.getId());
     }
   }
 
   /**
    * @function module:engine.Pipeline#start
    * @description Starts the pipeline.
-   *
    * @async
    */
   async start() {
     try {
       await this.loadAndValidate();
-      log.debug('Creating new container executor.');
+      Logger.debug('Creating new container executor.', this.getId());
       this.setStatus(Pipeline.STATUS.initializing);
       await this.getExec().init(this);
       this.setStatus(Pipeline.STATUS.running);
       await this.getPipelineTreeRoot().start();
-      log.debug(`Pipeline ${this.getId()} successful.`);
+      Logger.debug(`Pipeline ${this.getId()} successful.`, this.getId());
       this.setStatus(Pipeline.STATUS.successful);
     } catch (error) {
-      log.error(`Pipeline ${this.getId()} failed: ${error}`);
+      Logger.error(`Pipeline ${this.getId()} failed:`, this.getId());
+      Logger.error(`    ${error}`, this.getId());
       if (error && error.stack) {
-        log.debug(`${error.stack}`);
+        Logger.debug(`${error.stack}`, this.getId());
       }
       this.setStatus(Pipeline.STATUS.failed);
     } finally {
-      log.debug('Tearing down container executor.');
+      Logger.debug('Tearing down container executor.', this.getId());
       await this.cleanup();
     }
   }
@@ -653,18 +565,16 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#pause
    * @description Pauses the pipeline.
-   *
    * @async
    */
   async pause() {
-    log.debug('Pausing pipeline.');
+    Logger.debug('Pausing pipeline.', this.getId());
     this.setStatus(Pipeline.STATUS.paused);
   }
 
   /**
-   * @function module:engine.PipelineService#resumePipeline
+   * @function module:engine.Pipeline#resumePipeline
    * @description Continues a pipeline that is paused or not started.
-   *
    * @async
    * @param {string} [step] - A step name to run to and pause on.
    */
@@ -680,11 +590,11 @@ export default class Pipeline {
       if (step) {
         this.setBreakpoint(step);
         if (step == this.getStepList().pop().name) {
-          log.debug(`Step '${step}' was the last step, running entire pipeline.`);
+          Logger.debug(`Step '${step}' was the last step, running entire pipeline.`, this.getId());
           this.clearBreakpoint();
         } else if (step == this.getStepsList().pop().name &&
                    this.getStepsList().pop().getDescendants().pop() === this.getStepList().pop()) {
-          log.debug(`Steps '${step}' was the last step, running entire pipeline.`);
+          Logger.debug(`Steps '${step}' was the last step, running entire pipeline.`, this.getId());
           this.clearBreakpoint();
         }
       } else {
@@ -703,11 +613,9 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#cleanup
    * @description Cleans up log stream and docker.
-   *
    * @async
    */
   async cleanup() {
-    this.destroyLogStream();
     if (this.getExec()) {
       await this.getExec().tearDown();
     }
@@ -717,24 +625,22 @@ export default class Pipeline {
   /**
    * @function module:engine.Pipeline#kill
    * @description Kills the pipeline and runs teardown.
-   *
    * @async
    */
   async kill() {
     if (this.isActive()) {
-      log.info(`Killing pipeline ${this.getId()} as it is in the state '${this.getStatus()}'.`);
+      Logger.info(`Killing pipeline ${this.getId()} as it is in the state '${this.getStatus()}'.`, this.getId());
       this.setStatus(Pipeline.STATUS.paused); // paused while we tear it down
       await this.cleanup();
       this.setStatus(Pipeline.STATUS.skipped);
     } else {
-      log.silly(`Not killing pipeline ${this.getId()} as it is in the state '${this.getStatus()}'.`);
+      Logger.silly(`Not killing pipeline ${this.getId()} as it is in the state '${this.getStatus()}'.`, this.getId());
     }
   }
 
   /**
    * @function module:engine.Pipeline#nextStep
    * @description Continues pipeline to next step.
-   *
    * @async
    */
   async nextStep() {

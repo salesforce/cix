@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -11,11 +11,9 @@ import {getProtocol} from './Protocols.js';
 
 /**
  * @function module:common.Loader#relativePath
- *
  * @param {string} path - path being accessed
  * @param {object} environment - representation of the environment passed
  * @param {object} definition - representation of the pipeline
- *
  * @returns {string} relative path
  */
 export function relativePath(path, environment, definition) {
@@ -25,14 +23,13 @@ export function relativePath(path, environment, definition) {
 // eslint-disable-next-line no-unused-vars
 /**
  * @function module:common.Loader#fetch
- *
  * @param {string} path - path being accessed
  * @param {object} environment - representation of the environment passed
- *
+ * @param {string} httpAuthToken - (optional) provides authentication for fetch
  * @returns {object} yaml
  */
-export function fetch(path, environment) {
-  return LOADERS[getProtocol(path)].fetch(path, environment);
+export function fetch(path, environment, httpAuthToken) {
+  return LOADERS[getProtocol(path)].fetch(path, environment, httpAuthToken);
 }
 
 const LOADERS = {};

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -15,8 +15,12 @@ export default (payload, pipelineNode, promiseProvider) => {
         setTimeout(() => {
           reject(new ExecutionError(`Step ${payload.name || 'NoName'} timed out after ${payload.timeout} seconds`));
         }, _.toInteger(payload.timeout) * 1000);
-        const result = await promiseProvider.get();
-        resolve(result);
+        try {
+          const result = await promiseProvider.get();
+          resolve(result);
+        } catch (err) {
+          reject(err);
+        }
       });
     });
   }

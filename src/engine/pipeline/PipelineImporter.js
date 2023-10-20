@@ -1,24 +1,24 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {ExecutionError, ValidateError, _} from '../../common/index.js';
-import log from 'winston';
-import paths from 'deepdash/paths.js';
+import {ExecutionError, Logger, ValidateError, _} from '../../common/index.js';
+import paths from 'deepdash/paths';
 
 export default class PipelineImporter {
-  constructor({path, rawPipeline, environment}) {
+  constructor({path, rawPipeline, pipeline, httpAuthToken}) {
     this.path = _.emptyToNull(path);
+    this.rawPipeline = rawPipeline;
+    this.pipeline = pipeline;
     if (this.path != null) {
-      this.path = environment.replace$$Values(this.path);
+      this.path = this.pipeline.getEnvironment().replace$$Values(this.path);
       if (this.path.includes('$$')) {
         throw new ValidateError(`Import path '${this.path}' is missing an environment variable for substitution.`);
       }
     }
-    this.rawPipeline = rawPipeline;
-    this.environment = environment;
+    this.httpAuthToken = httpAuthToken;
     this.definition = {};
     this.errors = [];
   }
@@ -31,13 +31,16 @@ export default class PipelineImporter {
     let importPath;
     try {
       definition._yaml = new PipelineImporter({
-        path: _.relativePath(this.path, this.environment, definition),
-        environment: this.environment,
+        path: _.relativePath(this.path, this.pipeline.getEnvironment(), definition),
+        pipeline: this.pipeline,
+        httpAuthToken: definition['http_authorization_token'] || // for backwards compatibility
+                       definition['http-authorization-token'] ||
+                       this.httpAuthToken,
       });
       importPath = definition._yaml.path;
       await definition._yaml.loadFromFile();
     } catch (error) {
-      log.debug(error);
+      Logger.debug(error, this.pipeline.getId());
       throw new ExecutionError(`Failed importing ${importPath}`);
     }
   }
@@ -51,8 +54,7 @@ export default class PipelineImporter {
   }
 
   expandImportRequest(yaml, request) {
-    const
-      importFullPath = _.isObject(request) ? _.getOnlyElement(_.keys(request)) : request;
+    const importFullPath = _.isObject(request) ? _.getOnlyElement(_.keys(request)) : request;
     const [importPath, importSubPath] = _.split(importFullPath, '.');
     const environmentOverrides = _.isObject(request) ? _.getOnlyElement(_.values(request)).environment : {};
 
@@ -105,28 +107,44 @@ export default class PipelineImporter {
 
   async loadFromFile() {
     try {
-      let definition = await _.fetch(this.path, this.environment);
+      let definition = await _.fetch(this.path, this.pipeline.getEnvironment(), this.httpAuthToken);
+      if (!_.isEmpty(this.pipeline.getPlugins())) {
+        Logger.debug(`Plugins installed, running all preprocessors on ${this.path}.`, this.pipeline.getId());
+        definition = await this.runPreprocessor(definition);
+      }
       definition = await _.loadYamlOrJson(definition);
       definition = await this.loadImports(definition);
       definition = await this.expandImports(definition);
       this.definition = definition;
     } catch (error) {
-      log.debug(`${error}`);
+      Logger.error(`${error}`, this.pipeline.getId());
       throw new ExecutionError(`Failed loading YAML ${this.path}`);
     }
     return this.definition;
   }
 
   async loadFromMemory() {
+    if (!_.isEmpty(this.pipeline.getPlugins())) {
+      Logger.warn('Skipping preprocessor because of raw JSON input.', this.pipeline.getId());
+    }
     try {
       let definition = await this.loadImports(this.rawPipeline);
       definition = await this.expandImports(definition);
       this.definition = definition;
     } catch (error) {
-      log.debug(`${error}`);
-      throw new ExecutionError('Failed loading pipeline from memory');
+      Logger.debug(`${error}`, this.pipeline.getId());
+      throw new ExecutionError('Failed loading pipeline from memory', this.pipeline.getId());
     }
     return this.definition;
+  }
+
+  async runPreprocessor(definition) {
+    for (const plugin of this.pipeline.getPlugins()) {
+      Logger.silly(`Pipeline definition before preprocessor ${plugin.getId()}:\n${definition}`, this.pipeline.getId());
+      definition = await plugin.runPreprocessor(this.pipeline.getExec(), definition);
+      Logger.silly(`Pipeline definition after preprocessor ${plugin.getId()}:\n${definition}`, this.pipeline.getId());
+    }
+    return definition;
   }
 
   getSteps({path, environmentOverrides}) {
@@ -141,10 +159,8 @@ export default class PipelineImporter {
 
 /**
  * @function module:engine.PipelineImporter#applyEnvironmentOverrides
- *
  * @param {object} yaml - yaml to insert environment overrides
  * @param {object} environmentOverrides - object representing overrides
- *
  * @returns {object} yaml object with all overrides in place
  */
 function applyEnvironmentOverrides(yaml, environmentOverrides) {

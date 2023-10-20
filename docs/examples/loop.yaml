@@ -1,9 +1,11 @@
 version: 2.1
 pipeline:
   - step:
-      name: loop
-      image: alpine:3.9
+      name: for-each-empty
+      image: alpine:3.9   
+      for-each: $$FOO
+      element-variable: ELEMENT
+      parallel: true
+      commands-output: minimal
       commands:
-        - "[ $((RANDOM % 10)) -ge 8 ] && exit 1 || exit 0" # occasionally fail the command
-        # entire pipeline will fail, if any command in any of the loops fails (unlike retry)
-      loop: $$LOOPS
+        - echo $ELEMENT

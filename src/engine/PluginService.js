@@ -1,16 +1,14 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {PluginError, _} from '../common/index.js';
+import {Logger, PluginError, _} from '../common/index.js';
 import Plugin from './plugin/Plugin.js';
-import log from 'winston';
 
 /**
  * @class
- *
  * @description Services all engine calls.
  */
 class PluginService {
@@ -21,7 +19,6 @@ class PluginService {
   /**
    * @function module:engine.PluginService#addPlugin
    * @description Creates a new Plugin.
-   *
    * @async
    * @param {object} definition - A object representation of the plugin.
    * @returns {string} An object response containing the ID of the plugin.
@@ -32,7 +29,7 @@ class PluginService {
     await plugin.loadAndValidate();
     const pluginId = plugin.getId();
 
-    log.debug(`Adding new plugin to CIX: ${pluginId}`);
+    Logger.debug(`Adding new plugin to CIX: ${pluginId}`);
 
     this.plugins[pluginId] = plugin;
 
@@ -42,18 +39,16 @@ class PluginService {
   /**
    * @function module:engine.PluginService#getPluginList
    * @description Gets a list of plugin IDs that exist.
-   *
    * @returns {Array} List of pipeline ids.
    */
   getPluginList() {
-    log.silly('Getting list of plugin IDs.');
+    Logger.silly('Getting list of plugin IDs.');
     return Object.keys(this.plugins);
   }
 
   /**
    * @function module:engine.PluginService#getPlugin
    * @description Validates and loads a yaml.
-   *
    * @async
    * @param {object} pluginId - All parameters are sent in this object.
    * @returns {object} The validated/loaded YAML Pipeline.

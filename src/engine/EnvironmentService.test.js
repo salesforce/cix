@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -14,10 +14,10 @@ describe('EnvironmentService tests', () => {
   // !Important! EnvironmentService is a SINGLETON type object
   // cannot create more than one for testing, order is important!!
 
-  test('listEnvironmentVar should only contain CIX_HOSTNAME and CIX_EXECUTION_ID', async () => {
+  test('listEnvironmentVar should only contain CIX_HOSTNAME, CIX_SERVER_PORT and CIX_EXECUTION_ID', async () => {
     const resp = await PipelineService.addPipeline({yamlPath: 'docs/examples/basic.yaml', type: 'standard', environment: []});
 
-    expect(EnvironmentService.listEnvironmentVar(resp.id)).toEqual(['CIX_EXECUTION_ID', 'CIX_HOSTNAME']);
+    expect(EnvironmentService.listEnvironmentVar(resp.id)).toEqual(['CIX_EXECUTION_ID', 'CIX_HOSTNAME', 'CIX_SERVER_PORT']);
   });
 
   test('get/setEnvironmentVar should work', async () => {

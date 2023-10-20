@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -14,11 +14,9 @@ export default (payload, pipelineNode, promiseProvider) => {
 
 /**
  * Returns a step with additional properties provided by cli
- *
- * @function module:cix-yaml.Payload#getPayloadPromise
+ * @function module:engine.ModifyDecorator#modifyStep
  * @param {object} payload - json Object to add properties to
  * @param {object} environment - object of environment variables
- *
  * @returns {object} json Object representation of a payload
  */
 export function modifyStep(payload, environment) {
@@ -32,6 +30,10 @@ export function modifyStep(payload, environment) {
   }
 
   payload.environment = _.map(payload.environment, (env) => {
+    if (!env.value) {
+      // if value is undefined, set it to $$env.name
+      env.value = '$$'.concat(env.name);
+    }
     let replacementValue = environment.replace$$Values(env.value);
 
     if (env.value && typeof env.value === 'string' && env.value.includes('$$') && env.value === replacementValue) {
@@ -65,6 +67,10 @@ export function modifyStep(payload, environment) {
 
   if (payload.timeout) {
     payload.timeout = environment.replace$$Values(payload.timeout);
+  }
+
+  if (payload['for-each']) {
+    payload['for-each'] = environment.replace$$Values(payload['for-each']);
   }
 
   payload.volumes = _.map(payload.volumes, (volume) => environment.replace$$Values(volume));

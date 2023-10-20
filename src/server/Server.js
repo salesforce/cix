@@ -1,17 +1,15 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
-import {ServerError, _} from '../common/index.js';
+import {Logger, ServerError, _} from '../common/index.js';
 import dirname from './dirname.cjs';
 import express from 'express';
 import fs from 'fs';
-import helmet from 'helmet';
 import http from 'http';
 import indexRouter from './routes/index.js';
-import log from 'winston';
 import path from 'path';
 import pipelineRouter from './routes/api/pipeline.js';
 import pluginRouter from './routes/api/plugin.js';
@@ -27,13 +25,10 @@ export default class Server {
       port = 10030;
     }
 
-    log.debug('Starting CIX Server on port: ' + port);
+    Logger.debug('Starting CIX Server on port: ' + port);
 
     // Create app context
     this.loadRoutes();
-
-    // secure express server
-    this.app.set(helmet());
 
     // Get port from environment and store in Express.
     this.port = this.normalizePort(port);
@@ -51,7 +46,7 @@ export default class Server {
 
   async block() {
     // awaiting on a promise that will not resolve...
-    await new Promise(() => log.debug('Control-C to terminate...'));
+    await new Promise(() => Logger.debug('Control-C to terminate...'));
   }
 
   async close() {
@@ -97,12 +92,12 @@ export default class Server {
     this.app.use((error, req, res, next) => {
       // render the error page
       if (res._headerSent) {
-        log.debug('Headers already sent. Unable to send error response to client for pipeline failure.');
+        Logger.debug('Headers already sent. Unable to send error response to client for pipeline failure.');
       } else {
         const status = error.status || error.errorCode || 500;
-        log.error(`${status} handling error ${error.message}`);
+        Logger.error(`${status} handling error ${error.message}`);
         if (error.stack) {
-          log.debug(`${error.stack}`);
+          Logger.debug(`${error.stack}`);
         }
 
         res.status(status);
@@ -116,9 +111,7 @@ export default class Server {
 
   /**
    * @function module:server.Server#normalizePort
-   *
    * @param {object} port - port to normalize
-   *
    * @returns {number} normalized port
    */
   normalizePort(port) {
@@ -137,7 +130,6 @@ export default class Server {
   /**
    * @function module:server.Server#onError
    * @description Event listener for HTTP server "error" event.
-   *
    * @param {object} error - error object
    */
   onError(error) {
@@ -154,7 +146,6 @@ export default class Server {
 
   /**
    * @function module:server.Server#expressLogger
-   *
    * @param {object} req - request object
    * @param {object} res - response object
    * @param {object} next - function to be executed after logger
@@ -167,10 +158,10 @@ export default class Server {
     if (remoteAddress == '1') {
       remoteAddress = '127.0.0.1';
     }
-    log.debug(`${remoteAddress} ${req.method} ${req.originalUrl} received`);
-    log.silly(`Express Logger Message: ${JSON.stringify(req.body, null, 4)}`);
+    Logger.debug(`${remoteAddress} ${req.method} ${req.originalUrl} received`);
+    Logger.silly(`Express Logger Message: ${JSON.stringify(req.body, null, 4)}`);
     res.on('finish', function() {
-      log.debug(`${remoteAddress} ${req.method} ${req.originalUrl} ${res.statusCode}`);
+      Logger.debug(`${remoteAddress} ${req.method} ${req.originalUrl} ${res.statusCode}`);
     });
     next();
   }
@@ -180,6 +171,6 @@ export default class Server {
    */
   onListening() {
     const addr = this.server.address();
-    log.info(`Swagger ready at http://localhost:${addr.port}/api-docs`);
+    Logger.info(`Swagger ready at http://localhost:${addr.port}/api-docs`);
   }
 }

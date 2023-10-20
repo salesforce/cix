@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -10,7 +10,7 @@ import request from 'supertest';
 
 jest.mock('../../../docker/DockerExec.js'); // TODO fix me - auto-mocking currently has issues with es6 modules
 
-describe('environment', async () => {
+describe('environment', () => {
   let server;
   const port = Math.floor(Math.random() * 64536) + 1000;
 

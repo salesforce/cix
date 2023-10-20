@@ -1,12 +1,12 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* global beforeEach, describe, expect */
+import {ExecutionError} from '../index.js';
 import HTTPLoader from './HTTPLoader.js';
-import {ValidateError} from '../Errors.js';
 import axios from 'axios';
 
 jest.mock('axios');
@@ -52,6 +52,18 @@ describe('HTTPLoader.fetch', () => {
     environmentMock.getEnvironmentVariable = jest.fn();
     environmentMock.getEnvironmentVariable.mockReturnValue(undefined); // no token
 
-    await expect(loader.fetch('http://test.com/path', environmentMock)).rejects.toThrow(ValidateError);
+    await expect(loader.fetch('http://test.com/path', environmentMock)).rejects.toThrow(ExecutionError);
+  });
+
+  test('expect fetch to use YAML authToken over Environment authToken', async () => {
+    const expectedResp = {data: 'test_data'};
+    axios.mockImplementation(() => Promise.resolve(expectedResp));
+    const environmentMock = {};
+    environmentMock.getEnvironmentVariable = jest.fn();
+    environmentMock.replace$$Values = (input) => `${input}`;
+    environmentMock.getEnvironmentVariable.mockReturnValue({value: '5678'});
+
+    await loader.fetch('http://test.com/path', environmentMock, '1234');
+    expect(axios.mock.calls[0][0].headers.Authorization).toBe('token 1234');
   });
 });

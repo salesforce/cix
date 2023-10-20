@@ -5,13 +5,18 @@ pipeline:
       image: alpine:3.9
       environment:
         - name: FOO
-          value: $$FOO_FROM_COMMAND # if passed with -e option, $$ literals will be replaced
-          default: foo_default
+          # value passed in via '-e FOO=foo'
+          value: $$FOO
         - name: BAR
-          value: $$BAR_FROM_COMMAND
+          # value passed in via '-e BAR=bar'
+          value: $$BAR
+          # default passed in via '-e BAR_DEFAULT=bar-default'
           default: $$BAR_DEFAULT
-        # not passing these properties will not cause any failures
-        # the environment variables would be the $$ literals during exec, or the default, if specified
+        - name: BAZ
+          # when value is omitted, value == $$BAZ,
+          # passed in via '-e BAZ=baz'
+          default: baz-default
       commands:
         - echo $FOO
         - echo $BAR
+        - echo $BAZ

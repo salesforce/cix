@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
@@ -24,7 +24,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getName
    * @description Gets the name of the pipeline node.
-   *
    * @returns {string} The name of the node.
    */
   getName() {
@@ -34,7 +33,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getParent
    * @description Gets the parent of the pipeline item.
-   *
    * @returns {object} A reference to the parent.
    */
   getParent() {
@@ -44,7 +42,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getPipeline
    * @description Gets a pipeline reference.
-   *
    * @returns {object} A reference to the pipeline.
    */
   getPipeline() {
@@ -62,7 +59,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getType
    * @description Gets the type of the pipeline.
-   *
    * @returns {string} The type of pipeline.
    */
   getType() {
@@ -72,7 +68,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getDescendants
    * @description Returns a list of steps that can be iterated through.
-   *
    * @param {boolean} includeSelf - includes itself in the result.
    * @returns {Array} The list of descendants and current node.
    */
@@ -93,7 +88,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getErrors
    * @description Returns the errors associated with this pipeline's individual steps.
-   *
    * @returns {Array} An array of strings representing any errors found in the payload.
    */
   getErrors() {
@@ -103,7 +97,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getEnvironment
    * @description Returns a reference to the environment object.
-   *
    * @returns {object} A reference to the environment object.
    */
   getEnvironment() {
@@ -113,7 +106,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getExpectedEnvironment
    * @description Returns an array of keys representing env the step expects.
-   *
    * @returns {Array} Keys of the environment variables the step can use.
    */
   getExpectedEnvironment() {
@@ -129,7 +121,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getExec
    * @description Sets a new execution runtime.
-   *
    * @returns {object} The execution runtime.
    */
   getExec() {
@@ -139,7 +130,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getWorkspacePath
    * @description Gets the workspace path for the pipeline.
-   *
    * @returns {string} A string representation of the workspace path.
    */
   getWorkspacePath() {
@@ -149,7 +139,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.PipelineNode#getRegistries
    * @description Gets the registry information defined for the pipeline.
-   *
    * @returns {object} An object representation of the registries.
    */
   getRegistries() {
@@ -159,7 +148,6 @@ export default class PipelineNode {
   /**
    * @function module:engine.Step#start
    * @description Starts a step.
-   *
    * @async
    */
   async start() {

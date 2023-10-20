@@ -34,7 +34,12 @@ pipeline:
 ```
 
 ### Loops
-Learn how to use CIX's looping mechanism. Any loop iteration with a non-0 exit code will cause a pipeline failure.
+Learn how to use CIX's looping mechanism. There are two types of loops:
+1. A basic `loop` with a integer to represent how many loops to complete. The loop may optionally include a `counter-variable` attribute. This will add a counter environment variable for the step. 
+2. A `for-each` style loop. The `for-each` can take either a `yaml` list or a CSV list. An `element-variable` attribute is required for this style of loop. The element-variable will add an environment variable to that step with the current element being iterated over. The `for-each` may also optionally include a `counter-variable` attribute, just like the standard `loop`. This will add a counter environment variable for the step.
+
+Any loop iteration with a non-0 exit code will cause a pipeline failure. There also exists a `parallel` attriute to run the looped steps in parallel.
+
 
 * [docs/examples/loop.yaml](https://github.com/salesforce/cix/blob/master/docs/examples/loop.yaml) 
 
@@ -43,7 +48,7 @@ Learn how to use CIX's looping mechanism. Any loop iteration with a non-0 exit c
 To launch this example, run the following command in your terminal:
 
 ```bash
-cix exec -y docs/examples/loop.yaml -e LOOPS=3
+cix exec -y docs/examples/loop.yaml
 ```
 
 ### Retry

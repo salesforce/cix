@@ -1,15 +1,15 @@
 /*
-* Copyright (c) 2020, salesforce.com, inc.
+* Copyright (c) 2022, salesforce.com, inc.
 * All rights reserved.
 * SPDX-License-Identifier: BSD-3-Clause
 * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 */
 /* eslint-disable jsdoc/check-tag-names */
+import {Logger} from '../../../common/index.js';
 import {PipelineService} from '../../../engine/index.js';
 import asyncLogHandler from './asyncLogHandler.js';
 import environment from './environment.js';
 import express from 'express';
-import log from 'winston';
 
 const pipeline = express.Router();
 pipeline.use(environment);
@@ -120,13 +120,18 @@ pipeline.post('/', asyncLogHandler(async (req, res) => {
   if (!pipelineSpec.environment) {
     pipelineSpec.environment = [];
   }
-  // Grab the host header, remove the port
-  let host = req.headers.host;
-  if (host.includes(':')) {
-    host = host.split(':')[0];
+  // extract hostname and port from request
+  let host = 'locahost';
+  let port = '10030';
+  if (req.headers.host.includes(':')) {
+    host = req.headers.host.split(':')[0];
   }
-  // Add the host as 'CIX_HOSTNAME' for the pipeline
+  if (req.headers.host.includes(':')) {
+    port = req.headers.host.split(':')[1];
+  }
+  // Add the host as 'CIX_HOSTNAME' and 'CIX_SERVER_PORT' for the pipeline
   pipelineSpec.environment.push({name: 'CIX_HOSTNAME', value: host, type: 'internal'});
+  pipelineSpec.environment.push({name: 'CIX_SERVER_PORT', value: port, type: 'internal'});
   res.send(await PipelineService.addPipeline(pipelineSpec));
 }));
 
@@ -321,7 +326,10 @@ pipeline.post('/:pipelineId/alias/:pipelineAlias', asyncLogHandler(async (req, r
  *         in: "path"
  *         description: "Pipeline ID"
  *         required: true
- *         type: string
+ *       - name: "chainedStatus"
+ *         in: "query"
+ *         description: "Returns the status of chained pipeline"
+ *         type: boolean
  *     responses:
  *       200:
  *         description: "successful operation"
@@ -337,7 +345,11 @@ pipeline.post('/:pipelineId/alias/:pipelineAlias', asyncLogHandler(async (req, r
  *           type: string
  */
 pipeline.get('/:pipelineId/status', asyncLogHandler(async (req, res) => {
-  res.send({status: await PipelineService.getPipeline(req.params['pipelineId']).getStatus()});
+  if (req.query.chainedStatus !== undefined && req.query.chainedStatus === 'true') {
+    res.send({status: await PipelineService.getPipeline(req.params['pipelineId']).getStatus(true)});
+  } else {
+    res.send({status: await PipelineService.getPipeline(req.params['pipelineId']).getStatus()});
+  }
 }));
 
 /**
@@ -379,10 +391,10 @@ pipeline.get('/:pipelineId/status', asyncLogHandler(async (req, res) => {
  */
 pipeline.get('/:pipelineId/start', asyncLogHandler(async (req, res) => {
   if (req.query.blocking === undefined || req.query.blocking === 'true') {
-    log.debug('Server blocking on pipeline execution.');
+    Logger.debug('Server blocking on pipeline execution.');
     await PipelineService.startPipeline(req.params['pipelineId']);
   } else {
-    log.debug('Server non-blocking on pipeline execution.');
+    Logger.debug('Server non-blocking on pipeline execution.');
     PipelineService.startPipeline(req.params['pipelineId']);
   }
   res.send();
@@ -464,10 +476,10 @@ pipeline.get('/:pipelineId/pause', asyncLogHandler(async (req, res) => {
  */
 pipeline.get('/:pipelineId/resume', asyncLogHandler(async (req, res) => {
   if (req.query.blocking === undefined || req.query.blocking === 'true') {
-    log.debug('Server blocking on pipeline execution.');
+    Logger.debug('Server blocking on pipeline execution.');
     await PipelineService.resumePipeline(req.params['pipelineId'], req.query['step']);
   } else {
-    log.debug('Server non-blocking on pipeline execution.');
+    Logger.debug('Server non-blocking on pipeline execution.');
     PipelineService.resumePipeline(req.params['pipelineId'], req.query['step']);
   }
   res.send();
@@ -546,10 +558,10 @@ pipeline.get('/:pipelineId/kill', asyncLogHandler(async (req, res) => {
  */
 pipeline.get('/:pipelineId/next-step', asyncLogHandler(async (req, res) => {
   if (req.query.blocking === undefined || req.query.blocking === 'true') {
-    log.debug('Server blocking on pipeline execution.');
+    Logger.debug('Server blocking on pipeline execution.');
     await PipelineService.nextStepInPipeline(req.params['pipelineId'], req.query['step']);
   } else {
-    log.debug('Server non-blocking on pipeline execution.');
+    Logger.debug('Server non-blocking on pipeline execution.');
     PipelineService.nextStepInPipeline(req.params['pipelineId'], req.query['step']);
   }
   res.send();
