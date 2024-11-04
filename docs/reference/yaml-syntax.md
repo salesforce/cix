@@ -35,3 +35,4 @@ character sequences which are significant to YAML, such as `: ` (colon-space) ar
 - Wikipedia.org's article on YAML has a good [Syntax section](https://en.wikipedia.org/wiki/YAML#Syntax).
 - The YAML.org [Reference Card](https://yaml.org/refcard.html).
 - The complete [YAML 1.2 Spec](https://yaml.org/spec/1.2/spec.html).
+- Online linters like [yamllint](https://www.yamllint.com/) and [yamline](https://yamline.com/validator/) help check for correct syntax in your YAML files.
